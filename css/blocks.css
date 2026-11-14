@@ -1,0 +1,32 @@
+.rad-card,.ins-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.rad-title,.ins-title{margin:0 0 8px;font-size:15px;font-weight:600;color:var(--muted)}
+.rad-big{line-height:1.1}
+.rad-num{font-size:34px;font-weight:700}
+.rad-unit{font-size:15px;color:var(--muted)}
+.rad-sub{font-size:13px;color:var(--muted);margin:4px 0 8px}
+.rad-spark{display:block;width:100%;height:auto;overflow:visible}
+.rad-area{fill:rgba(96,165,250,.22)}
+.rad-line{stroke:var(--blue);stroke-width:2}
+.rad-proj{stroke:var(--blue);stroke-width:1.5;stroke-dasharray:4 4;opacity:.7}
+.rad-now{stroke:var(--line);stroke-width:1}
+.rad-spike{stroke:var(--yellow);stroke-width:1;stroke-dasharray:2 2}
+.rad-dot{fill:var(--yellow)}
+.rad-evt{fill:var(--yellow);font-size:10px}
+.rad-axis{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.rad-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.rad-note{font-size:11px;color:var(--muted);margin-top:6px}
+.ins-list{list-style:none;margin:0;padding:0}
+.ins-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.ins-row:first-child{border-top:0}
+.ins-icon{flex:0 0 26px;width:26px;height:26px;color:var(--blue);margin-top:2px}
+.ins-main{flex:1;min-width:0}
+.ins-name{font-size:15px;font-weight:600}
+.ins-model,.ins-feeds{font-size:12px;color:var(--muted)}
+.ins-main .src{display:inline-block;margin-top:4px}
+.ins-status{display:flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap;margin-top:2px}
+.ins-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:0 0 8px}
+.ins-live{background:var(--green);animation:ins-pulse 1.6s ease-out infinite}
+@keyframes ins-pulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.6)}100%{box-shadow:0 0 0 8px rgba(52,211,153,0)}}
+@media (prefers-reduced-motion:reduce){.ins-live{animation:none}}
+.ins-foot{font-size:11px;color:var(--muted);margin-top:8px}
+@media (max-width:480px){.ins-row{flex-wrap:wrap}.ins-status{margin-left:38px;width:100%}}
