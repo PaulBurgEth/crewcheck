@@ -20,3 +20,8 @@ test('Earth link: delay words per distance', async () => {
   assert.equal(eachWay(missionById('moon')), '1.3 s each way');
   assert.equal(eachWay(missionById('mars-transit')), '20 min each way');
 });
+
+test('Mars surface carries a return note; Mars transit does not', () => {
+  assert.equal(missionById('mars').tabNote, 'launch-window return');
+  assert.equal(missionById('mars-transit').tabNote, undefined);
+});

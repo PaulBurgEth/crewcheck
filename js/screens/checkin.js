@@ -131,7 +131,7 @@ export default function render(root, { go } = {}) {
     status,
     h('div', { class: 'ci-auto' }, [
       h('div', { class: 'ci-auto-chips' }, AUTO.map((a) => h('span', { class: 'ci-chip', text: `${a} · auto ✓` }))),
-      h('div', { class: 'ci-auto-note', text: 'From the suit — nothing to do' }),
+      h('div', { class: 'ci-auto-note', text: 'From the suit' }),
     ]),
     field(fMood, h('div', { class: 'ci-faces' }, moodBtns), ['mood']),
     field(fEyes, h('div', { class: 'ci-eyes' }, [

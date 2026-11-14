@@ -2,7 +2,7 @@ import { h } from '../ui.js';
 import { state, person, mission, verdictFor, statusStrip, set } from '../state.js';
 import { buildDownlink, packetSize } from '../engine/downlink.js';
 import { MISSIONS } from '../data/missions.js';
-import { linkOf, shipSvg, earthSvg, reduced } from '../viz/scene.js';
+import { linkOf, shipSvg, earthSvg, reduced, homeRow, tabLabel } from '../viz/scene.js';
 import { icon } from '../viz/icons.js';
 import { SYSTEMS } from '../data/rules.js';
 import { SIGNAL_LABEL } from '../data/explain.js';
@@ -70,6 +70,7 @@ function linkPicture(m, entries) {
   const again = h('button', { type: 'button', class: 'scn-cmp ea-again' }, [icon('replay'), h('span', { text: 'Send again' })]);
   const box = h('div', { class: 'scn ea-link', 'data-mission': m.id, style: `--len:${L.len}` }, [
     band,
+    homeRow(m),
     h('div', { class: 'ea-qs' }, [
       h('div', { class: 'ea-qcol ea-q-ship' }, [h('span', { class: 'ea-qh', text: 'On board' }), board]),
       h('div', { class: 'ea-qcol ea-q-earth' }, [h('span', { class: 'ea-qh', text: 'At Earth' }), landed]),
@@ -131,7 +132,7 @@ export default function render(root, { go } = {}) {
   const sw = h('div', { class: 'scn-switch ea-switch', role: 'radiogroup', 'aria-label': 'Distance from Earth' }, MISSIONS.map((mi) => h('button', {
     type: 'button', class: `scn-ms${mi.id === m.id ? ' on' : ''}`, role: 'radio', 'aria-checked': String(mi.id === m.id), 'data-mission': mi.id,
     onclick: () => { if (mi.id !== state.missionId) set({ missionId: mi.id }); },
-  }, [h('span', { class: 'scn-ms-l', text: mi.label })])));
+  }, tabLabel(mi))));
   const strip = statusStrip(p.id).slice(rep.from - 1, state.day);
   const copyBtn = h('button', { class: 'ea-copy', type: 'button', text: 'Copy report (JSON)' });
   copyBtn.addEventListener('click', async () => {

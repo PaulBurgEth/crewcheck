@@ -24,6 +24,13 @@ export const earthSvg = () => el('svg', { class: 'scn-glyph', viewBox: '0 0 44 4
   el('path', { d: 'M27 24 C33 22 36 27 32 33 C28 36 25 31 27 24 Z', class: 'scn-land' }),
 ]);
 
+// Mars surface: return home only at a launch window (design assumption). Same row on Monitor and Earth.
+export function homeRow(m) {
+  if (!m.tabNote) return null;
+  return h('div', { class: 'scn-home' }, [icon('flag'), h('span', {}, 'Home only at launch window'), h('span', { class: 'scn-tag' }, 'design assumption')]);
+}
+export const tabLabel = (mi) => [h('span', { class: 'scn-ms-l' }, mi.label), mi.tabNote ? h('span', { class: 'scn-ms-c' }, mi.tabNote) : null];
+
 export const mmss = (sec) => { const s = Math.max(0, Math.round(sec)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
 export const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -46,8 +53,9 @@ export function createScene(container, { onMission, onCompare } = {}) {
   ]);
   const clock = h('div', { class: 'scn-clock', 'aria-live': 'polite' });
   const mayRow = h('div', { class: 'scn-may', 'data-spot': 'may' });
+  const home = h('div', { class: 'scn-home-box' });
   const cmp = h('div', { class: 'scn-compare', hidden: true });
-  container.replaceChildren(h('div', { class: 'scn-top' }, [sw, cmpBtn]), band, mayRow, clock, cmp);
+  container.replaceChildren(h('div', { class: 'scn-top' }, [sw, cmpBtn]), band, mayRow, home, clock, cmp);
 
   let key = null;
   let timer = 0;
@@ -93,7 +101,8 @@ export function createScene(container, { onMission, onCompare } = {}) {
     sw.replaceChildren(...missions.map((mi) => h('button', {
       type: 'button', class: `scn-ms${mi.id === m.id ? ' on' : ''}`, role: 'radio', 'aria-checked': String(mi.id === m.id),
       'data-mission': mi.id, title: `Care: ${mi.careLabel}`, onclick: () => onMission?.(mi.id),
-    }, [h('span', { class: 'scn-ms-l' }, mi.label)])));
+    }, tabLabel(mi))));
+    home.replaceChildren(...[homeRow(m)].filter(Boolean));
     cmpBtn.setAttribute('aria-pressed', String(compare));
     container.style.setProperty('--len', String(linkOf(m).len));
     for (const [id, n] of Object.entries(nodes)) {

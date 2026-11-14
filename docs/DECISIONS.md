@@ -34,3 +34,8 @@ Architecture source: NASA_SpaceApps_2026_ARCHITECTURE.md (approved 14.11.2026), 
 - **How**: HTML grid/flex with small inline SVG arrows and the shared icon set (reflows to 375 px; vertical chain under 640 px). Agent lists come from `js/engine/agent.js` exports, so the picture cannot drift from the agent's real limits.
 - **Rejected**: one fixed-size SVG (no reflow); AI as a fourth box in the chain (reads as if AI is a decision step).
 - **QA fixes (v19)**: Forecast → Verdict arrow dashed (yellow), caption "warns, never decides"; arrows to AI 34 px, cross thicker; Earth glow on landing longer (0.8 s) with a small scale; speed tag "20 min → 3.2 s" (five-word rule).
+
+## B1, B2 from QA (14.11.2026)
+- **B1**: Mars surface now differs visibly from Mars transit: the tab carries "launch-window return", and the Monitor scene and the Earth screen show one row "Home only at launch window" tagged "design assumption" (`homeRow`, `tabLabel` in `js/viz/scene.js`, field `tabNote` in `js/data/missions.js`). Decision logic unchanged.
+- **B2**: texts on Crew and Check-in cut to five words or fewer ("100 = all normal" with an icon link to Sources, "Crew patch complete", "From the suit").
+- **Exception to the five-word rule**: Sources is a reference screen. Its banner and legend lines keep their full wording.
