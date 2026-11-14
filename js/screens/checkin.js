@@ -5,6 +5,10 @@ import { state, saveEntry, localEntry, recordsOf, verdictFor, person } from '../
 const filled = (v) => v !== '' && v != null;
 import { validateCheckin } from '../engine/validate.js';
 import { renderDayRing, renderPatch } from '../viz/badges.js';
+import { nextMeasurements } from './instruments.js';
+import { icon } from '../viz/icons.js';
+
+const NEXT_ICON = { 'Cognition tests': 'brain', Questionnaires: 'form', 'Periodic exams': 'drop' };
 
 export const CHECKIN_FIELDS = [
   { id: 'mood', label: 'Mood', how: 'Tap the face that fits today', why: 'Mood drifts early under isolation (NASA)' },
@@ -119,7 +123,10 @@ export default function render(root, { go } = {}) {
   };
 
   root.replaceChildren(h('div', { class: 'ci' }, [
-    h('div', { class: 'ci-head' }, [h('h2', { class: 'ci-title', text: `Check-in · ${person().name} · Day ${day}` }), ringBox]),
+    h('div', { class: 'ci-head' }, [h('h2', { class: 'ci-title', text: `Check-in · ${person().name} · Day ${day}` }), h('div', { class: 'ci-ringcol' }, [ringBox,
+      // Next scheduled measurements: icon and day only.
+      h('div', { class: 'ci-next', 'aria-label': 'Next measurements' }, nextMeasurements(day).slice(0, 3).map((m) => h('span', { class: 'ci-next-i', title: `${m.label}: day ${m.day}` }, [icon(NEXT_ICON[m.label] || 'clock'), h('b', { text: `d${m.day}` })]))),
+    ])]),
     status,
     h('div', { class: 'ci-auto' }, [
       h('div', { class: 'ci-auto-chips' }, AUTO.map((a) => h('span', { class: 'ci-chip', text: `${a} · auto ✓` }))),

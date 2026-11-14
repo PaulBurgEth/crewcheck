@@ -1,5 +1,7 @@
 import { h } from '../ui.js';
-import { state, mission, verdictFor, recordsOf, localEntry } from '../state.js';
+import { state, mission, verdictFor, recordsOf, localEntry, statusStrip } from '../state.js';
+import { evaluate } from '../engine/evaluate.js';
+import { el } from '../viz/svg.js';
 import { personIndex, crewIndex, indexColor } from '../engine/score.js';
 import { renderRings } from '../viz/rings.js';
 import { renderPatch } from '../viz/badges.js';
@@ -14,6 +16,43 @@ const tierText = (p, tier, crew) => {
   return p.id === medic?.id ? `Backup: ${backup.name.split(' ')[0]}` : `→ ${medic.name.split(' ')[0]} (crew medic)`;
 };
 const CSSV = (n) => `var(--${n})`;
+
+// Numbers count from the last shown value, so a change (after a check-in, a new day) is seen, not jumped.
+const shown = new Map();
+const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function countUp(node, key, to) {
+  if (!node || to == null) return;
+  const from = shown.has(key) ? shown.get(key) : to;
+  shown.set(key, to);
+  if (from === to || reduced()) { node.textContent = String(to); return; }
+  const t0 = Date.now();
+  node.textContent = String(from);
+  const timer = setInterval(() => {
+    const k = Math.min(1, (Date.now() - t0) / 700);
+    node.textContent = String(Math.round(from + (to - from) * (1 - (1 - k) ** 3)));
+    if (k >= 1 || !node.isConnected) clearInterval(timer);
+  }, 30);
+}
+
+// Crew index over the whole mission, recomputed only when someone's data changes.
+let seriesKey = null;
+let series = [];
+function indexSeries() {
+  const strips = state.crew.map((c) => statusStrip(c.id));
+  if (seriesKey && strips.every((s, i) => s === seriesKey[i])) return series;
+  seriesKey = strips;
+  series = Array.from({ length: 180 }, (_, i) => crewIndex(state.crew.map((c) => personIndex(evaluate(recordsOf(c.id), i + 1)))));
+  return series;
+}
+function indexStrip(day) {
+  const s = indexSeries();
+  const W = 180, H = 24, lo = Math.min(...s.filter((v) => v != null)) - 3, x = (d) => d - 1, y = (v) => H - 2 - ((v - lo) / (100 - lo)) * (H - 4);
+  const pts = s.map((v, i) => (v == null ? null : `${x(i + 1)},${y(v).toFixed(1)}`)).filter(Boolean).join(' ');
+  return el('svg', { class: 'ci-strip', viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: 'none', role: 'img', 'aria-label': `Crew index over 180 days, day ${day}: ${s[day - 1] ?? '–'}` }, [
+    el('polyline', { points: pts, class: 'ci-strip-l' }),
+    el('line', { x1: x(day), x2: x(day), y1: 0, y2: H, class: 'ci-strip-now' }),
+  ]);
+}
 
 function checkedIn(personId, day) {
   if (localEntry(personId, day)) return true;
@@ -34,10 +73,11 @@ export default function renderCrew(root, { go }) {
   const patch = h('div', { class: 'crew-patch' });
   const head = h('div', { class: 'crew-head' }, [
     h('div', {}, [h('div', { class: 'crew-title', text: `Crew · Day ${state.day}` }), h('div', { class: 'muted', text: `${m.label} · ${m.careLabel}` })]),
-    h('div', { class: `crew-index i-${indexColor(cIdx)}`, title: 'CrewCheck Index (formula on Sources)' }, [h('span', { class: 'ci-num', text: cIdx ?? '–' }), h('span', { class: 'ci-lab', text: 'Crew index' }), h('span', { class: 'ci-sub', text: '100 = all systems normal · formula in Sources' })]),
+    h('div', { class: `crew-index i-${indexColor(cIdx)}`, title: 'CrewCheck Index (formula on Sources)' }, [h('span', { class: 'ci-num', text: cIdx ?? '–' }), h('span', { class: 'ci-lab', text: 'Crew index' }), indexStrip(state.day), h('span', { class: 'ci-sub', text: '100 = all systems normal · formula in Sources' })]),
     h('div', { class: 'crew-patch-wrap' }, [patch, h('div', { class: 'ci-sub', text: doneCount === 4 ? 'Crew patch complete: all checked in today' : `Crew patch: ${doneCount} of 4 checked in` })]),
   ]);
   root.append(head);
+  countUp(head.querySelector('.ci-num'), 'crew', cIdx);
   patch.append(renderPatch({ done: rows.map((r) => r.done), names: rows.map((r) => r.p.name), size: 96, flash: doneCount === 4 }));
 
   const grid = h('div', { class: 'crew-grid' });
@@ -60,6 +100,7 @@ export default function renderCrew(root, { go }) {
       center: String(r.idx ?? '–'),
       rings: [{ label: 'Index', value: (r.idx ?? 0) / 100, color: CSSV(indexColor(r.idx)) }],
     });
+    countUp(tile.querySelector('.cc-ring-center'), r.p.id, r.idx);
     grid.append(tile);
   }
   root.append(grid);

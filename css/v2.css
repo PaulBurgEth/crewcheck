@@ -341,3 +341,18 @@
 .ci-saved.ci-res-red{background:rgba(248,113,113,.14);color:var(--red);border-color:var(--red)}
 @media (prefers-reduced-motion:reduce){.patch.flash .pt-rim,.dring.closed{animation:none}}
 @media (max-width:760px){.today.v2 .who{flex-wrap:wrap;gap:8px}.ci-saved .ci-btn{margin-left:0}}
+.ci-strip{display:block;width:160px;height:24px;margin:4px auto 2px}
+.ci-strip-l{fill:none;stroke:var(--green);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.ci-strip-now{stroke:var(--text);stroke-width:1.5;vector-effect:non-scaling-stroke}
+/* Trends draw-in */
+.tr-chart{position:relative}
+canvas.tr-draw{animation:trdraw 1.6s cubic-bezier(.4,0,.2,1) both}
+@keyframes trdraw{0%{clip-path:inset(0 100% 0 0)}60%{clip-path:inset(0 calc(100% - var(--today,70%)) 0 0)}100%{clip-path:inset(0 0 0 0)}}
+.tr-ping{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--text);pointer-events:none;opacity:0;animation:trping 1.2s ease 1s 1 both}
+@keyframes trping{0%{opacity:0;box-shadow:0 0 0 0 rgba(232,238,252,.7)}20%{opacity:1}100%{opacity:0;box-shadow:0 0 0 16px rgba(232,238,252,0)}}
+@media (prefers-reduced-motion:reduce){canvas.tr-draw,.tr-ping{animation:none}}
+.ci-ringcol{display:flex;flex-direction:column;align-items:center;gap:6px}
+.ci-next{display:flex;gap:8px}
+.ci-next-i{display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--muted)}
+.ci-next-i .ic{width:15px;height:15px;color:var(--blue)}
+.ci-next-i b{font-variant-numeric:tabular-nums;font-weight:700;color:var(--text)}
