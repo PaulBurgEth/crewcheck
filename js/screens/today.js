@@ -14,9 +14,10 @@ import { renderRings } from '../viz/rings.js';
 import { renderRadiation } from './radiation-card.js';
 import { renderInstruments } from './instruments.js';
 import { findAdvice, PRECOMPUTED_LABEL } from '../data/advisor-precomputed.js';
-import { attachAdvice } from '../engine/advisor.js';
+import { attachAdvice, advisorPayload } from '../engine/advisor.js';
 import { evaluate } from '../engine/evaluate.js';
-import { getLiveAdvice } from './advisor-live.js';
+import { getLiveAdvice, requestLiveAdvice, PROXY_URL } from './advisor-live.js';
+
 
 // Consecutive days with a check-in, counted back from the current day.
 function streakOf(records, day) {
@@ -154,6 +155,9 @@ export function renderToday(root, hooks = {}) {
     const whyBox = h('div', { class: 'why-box' });
     verdict.after(whyBox);
     renderWhy(whyBox, { systemId: state.system, ev, onClose: () => set({ system: null }) });
+  }
+  if (PROXY_URL && v.status !== 'green' && !getLiveAdvice(p.id, state.day)) {
+    requestLiveAdvice(p.id, state.day, advisorPayload(ev, v, m), () => set({}));
   }
   hooks.after?.({ root, side, extra, bodyBox, ev, v, p, m });
 }
