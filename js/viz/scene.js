@@ -38,8 +38,9 @@ export function createScene(container, { onMission, onCompare } = {}) {
     h('div', { class: 'scn-end scn-right' }, [nodes.earth, earthSvg()]),
   ]);
   const clock = h('div', { class: 'scn-clock', 'aria-live': 'polite' });
+  const mayRow = h('div', { class: 'scn-may', 'data-spot': 'may' });
   const cmp = h('div', { class: 'scn-compare', hidden: true });
-  container.replaceChildren(h('div', { class: 'scn-top' }, [sw, cmpBtn]), band, clock, cmp);
+  container.replaceChildren(h('div', { class: 'scn-top' }, [sw, cmpBtn]), band, mayRow, clock, cmp);
 
   let key = null;
   let timer = 0;
@@ -73,7 +74,9 @@ export function createScene(container, { onMission, onCompare } = {}) {
     }, 40);
   }
 
-  function update({ missions, mission: m, v, compare = false, compareRows = [], replay = '', selfName = '' }) {
+  function update({ missions, mission: m, v, compare = false, compareRows = [], replay = '', selfName = '', may = [] }) {
+    // What the onboard agent may do on its own grows with distance (design assumption).
+    mayRow.replaceChildren(h('span', { class: 'scn-may-k' }, 'Agent may'), ...may.map((x) => h('span', { class: `scn-may-i${x.on ? ' on' : ''}`, title: `${x.label}${x.on ? '' : ' (not here)'}`, 'aria-label': `${x.label}: ${x.on ? 'yes' : 'no'}` }, [icon(x.icon)])), h('span', { class: 'scn-tag' }, 'design assumption'));
     if (selfName) nodes.self.querySelector('.scn-name').textContent = selfName;
     sw.replaceChildren(...missions.map((mi) => h('button', {
       type: 'button', class: `scn-ms${mi.id === m.id ? ' on' : ''}`, role: 'radio', 'aria-checked': String(mi.id === m.id),
@@ -102,6 +105,7 @@ export function createScene(container, { onMission, onCompare } = {}) {
         h('div', { class: 'scn-col-m' }, r.mission.label),
         h('div', { class: 'scn-dots' }, r.signals.map((s) => h('span', { class: `scn-dot d-${s.status}`, title: s.label }))),
         h('div', { class: 'scn-col-who' }, [icon(r.tier === 'none' ? 'check' : NODE[r.tier][0]), h('span', {}, r.tier === 'none' ? 'All clear' : NODE[r.tier][1])]),
+        r.may ? h('div', { class: 'scn-col-may' }, [icon('spark'), h('span', {}, `Agent may: ${r.may} of 6`)]) : null,
       ])));
     }
   }

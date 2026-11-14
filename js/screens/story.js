@@ -10,7 +10,7 @@ export const STEPS = [
   { id: 'drift', name: 'Drift', from: 103, day: 118, mission: 'mars-transit', spots: ['timeline', 'body'], caption: 'Three signals drift together.', ms: 6500 },
   { id: 'rules', name: 'Rules', day: 118, mission: 'mars-transit', spots: ['rules'], caption: 'Rules decide. Every rule has a source.', ms: 6000 },
   { id: 'distance', name: 'Distance', day: 118, missions: ['iss', 'moon', 'mars-transit'], spots: ['scene'], caption: 'Near Earth the surgeon answers. Here the crew acts.', ms: 7500 },
-  { id: 'act', name: 'Act', from: 118, day: 121, mission: 'mars-transit', spots: ['act', 'scene', 'advisor'], caption: 'The crew acts while the answer travels.', ms: 6500, advisor: true },
+  { id: 'act', name: 'Act', from: 118, day: 121, mission: 'mars-transit', spots: ['act', 'scene'], caption: 'The agent acts within its limits. The medic approves the rest.', ms: 8000 },
   { id: 'check', name: 'Check', day: 128, mission: 'mars-transit', spots: ['check'], caption: 'Did it work? Sleep yes. Pressure not yet.', ms: 6000 },
 ];
 const TRY = { id: 'try', name: 'Try', spots: ['timeline', 'scene', 'switch', 'body'], dots: ['timeline', 'switch', 'body'], caption: 'Now try it yourself.' };
