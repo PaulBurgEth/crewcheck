@@ -1,5 +1,6 @@
 import { h, confBadge } from '../ui.js';
-import { state, set, person, mission, verdictFor, statusStrip, eventsFor, setLiveAlert, localEntry } from '../state.js';
+import { state, set, person, mission, verdictFor, statusStrip, eventsFor, setLiveAlert, localEntry, recordsOf } from '../state.js';
+import { renderStreak, renderPatch } from '../viz/badges.js';
 import { MISSIONS, missionById } from '../data/missions.js';
 import { SYSTEMS } from '../data/rules.js';
 import { renderBody } from '../viz/body.js';
@@ -102,7 +103,8 @@ export function renderToday(root, hooks = {}) {
   if (story.on) renderStoryBar(shell.bar, { who: `${p.name} · Day ${state.day}` });
 
   shell.head.replaceChildren(
-    h('div', { class: 'who', title: p.role }, [h('span', { class: 'who-name', text: p.name })]),
+    h('div', { class: 'who', title: p.role }, [h('span', { class: 'who-name', text: p.name }), renderStreak(records, state.day),
+      renderPatch({ done: state.crew.map((c) => recordsOf(c.id)[state.day - 1]?.mood != null), names: state.crew.map((c) => c.name), size: 34 })]),
   );
 
   // Timeline with event icons and a Play button.
