@@ -56,7 +56,7 @@ window.addEventListener('hashchange', () => { const p = readHash(); if ((p.route
 render();
 
 // Screens added in later steps register themselves.
-const LATER = ['crew', 'checkin', 'trends'];
+const LATER = ['crew', 'checkin', 'trends', 'earth', 'sources'];
 for (const id of LATER) {
   import(`./screens/${id}.js`).then((mod) => { registerScreen(id, mod.default); if (state.route === id) render(); }).catch(() => {});
 }

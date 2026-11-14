@@ -21,7 +21,7 @@ button.link{background:none;border:0;color:var(--muted);text-decoration:underlin
 .who-role,.where{color:var(--muted)}
 .where{font-size:18px;color:var(--text)}
 .today-grid{display:grid;grid-template-columns:minmax(260px,1fr) minmax(300px,1.1fr);gap:20px;align-items:start}
-.today-body{height:min(58vh,600px);min-height:400px;display:flex;justify-content:center}
+.today-body{height:min(58vh,600px);min-height:400px;display:flex;justify-content:center;position:sticky;top:12px}
 .today-side{display:flex;flex-direction:column;gap:14px}
 .verdict{border-radius:16px;padding:16px 18px;background:var(--panel);border-left:6px solid var(--muted)}
 .verdict-line{font-size:26px;font-weight:700;line-height:1.15}
@@ -77,3 +77,13 @@ button.link{background:none;border:0;color:var(--muted);text-decoration:underlin
 .ct-check{font-size:13px;color:var(--muted)}.ct-check.ok{color:var(--green)}
 .ahead{display:flex;gap:8px;flex-wrap:wrap}
 .ahead-chip{display:flex;align-items:center;gap:8px;background:rgba(251,191,36,.08);border:1px dashed rgba(251,191,36,.5);border-radius:999px;padding:5px 12px 5px 5px;font-size:15px}
+.fu{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.fu-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.fu-title{font-weight:700;font-size:17px}
+.fu-worked .fu-title{color:var(--green)}.fu-not-worked .fu-title{color:#fb923c}.fu-pending .fu-title{color:var(--blue)}
+.fu-track{display:flex;gap:4px}.fu-step{flex:1;height:8px;border-radius:4px;background:#1b2742}.fu-step.on{background:var(--blue)}
+.fu-items{display:flex;gap:8px;flex-wrap:wrap}
+.fu-item{display:flex;gap:6px;align-items:center;padding:4px 10px;border-radius:999px;background:#0b1220;font-size:14px}
+.fi-mark{font-weight:800}.fi-worked .fi-mark{color:var(--green)}.fi-not-worked .fi-mark{color:var(--red)}.fi-pending .fi-mark{color:var(--muted)}
+.fu-up{font-weight:700;color:#fb923c}
+@media (max-width:760px){.today-body{position:static}}

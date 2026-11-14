@@ -79,6 +79,24 @@ export function renderToday(root, hooks = {}) {
     });
   }
   tlCache = { personId: p.id, node: tl, day: state.day };
+  const { fu } = verdictFor();
+  if (fu && fu.state !== 'none' && state.day <= fu.dueDay + 14) {
+    const left = Math.max(0, fu.dueDay - state.day);
+    const card = h('div', { class: `fu fu-${fu.state}` }, [
+      h('div', { class: 'fu-head' }, [
+        h('span', { class: 'fu-title', text: fu.state === 'pending' ? 'Countermeasure running' : fu.state === 'worked' ? 'Countermeasure worked' : 'Countermeasure: partly' }),
+        h('span', { class: 'muted', text: fu.state === 'pending' ? `re-check in ${left} d` : `checked day ${fu.dueDay}` }),
+      ]),
+      h('div', { class: 'fu-track' }, Array.from({ length: fu.dueDay - fu.startDay + 1 }, (_, i) => h('span', { class: `fu-step ${fu.startDay + i <= state.day ? 'on' : ''}` }))),
+      h('div', { class: 'fu-items' }, fu.items.map((it) => h('span', { class: `fu-item fi-${it.result}` }, [
+        h('span', { class: 'fi-mark', text: it.result === 'worked' ? '✓' : it.result === 'not-worked' ? '✕' : '…' }),
+        SIGNAL_LABEL[it.signal][0],
+      ]))),
+      fu.state === 'not-worked' ? h('div', { class: 'fu-up', text: 'Not enough · crew medic takes over' }) : null,
+    ]);
+    extra.append(card);
+  }
+
   // Suit stream keeps running across re-renders for the same person and day.
   const suitKey = `${p.id}|${state.day}`;
   if (!suitCache || suitCache.key !== suitKey) {
