@@ -36,7 +36,7 @@ export function go(route, patch = {}) {
   if (story.on && (route !== 'today' || patch.personId)) stopStory();
   if (route !== 'today' || (patch.personId && patch.personId !== state.personId)) resetTimeline();
   set({ ...patch, route, system: patch.system ?? null });
-  history.replaceState(null, '', `#/${route}`);
+  if (!(story.on && route === 'today')) history.replaceState(null, '', `#/${route}`);
   window.scrollTo(0, 0);
 }
 

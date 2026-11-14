@@ -1,6 +1,7 @@
 import { h, el } from '../viz/svg.js';
 import { icon } from '../viz/icons.js';
 import { SIGNAL_LABEL } from '../data/explain.js';
+import { SOURCES } from '../data/sources.js';
 
 export const SYSTEM_ICON = { heart: 'cuff', lungs: 'drop', eyes: 'eye', sleep: 'moon', mind: 'brain', bones: 'run', metabolic: 'drop' };
 const WHO = { self: ['person', 'Me'], crew: ['cross', 'Crew medic'], earth: ['cross', 'Flight surgeon'] };
@@ -47,7 +48,7 @@ function miniScale({ rule, status, records, day, base }) {
 }
 
 // "Decided by rules": what moved, why (scales), who acts, when Earth can answer.
-export function renderVerdict(container, { ev, v, records, mission, onRule }) {
+export function renderVerdict(container, { ev, v, records, mission, onRule, selfName = '' }) {
   const fired = [];
   const seen = new Set();
   for (const f of [...ev.fired].sort((a, b) => (a.kind === 'abs' ? -1 : 1) - (b.kind === 'abs' ? -1 : 1))) {
@@ -79,8 +80,12 @@ export function renderVerdict(container, { ev, v, records, mission, onRule }) {
       h('span', {}, [h('i', { class: 'lg-norm' }), 'personal norm']),
       h('span', {}, [h('i', { class: 'lg-thr' }), 'threshold']),
       h('span', {}, [h('i', { class: 'lg-now' }), 'now']),
-    ])]);
-    const [wi, wn] = WHO[v.tier];
+    ]), h('div', { class: 'vd-src' }, [icon('rule'), ...[...new Set(fired.map((f) => f.source))].map((id) => {
+      const s = SOURCES[id];
+      return s?.url ? h('a', { class: `src src-${s.kind}`, href: s.url, target: '_blank', rel: 'noopener', title: s.title }, s.short) : h('span', { class: `src src-${s?.kind || 'assumption'}`, title: s?.title || '' }, s?.short || id);
+    })])]);
+    const [wi, wn0] = WHO[v.tier];
+    const wn = v.tier === 'self' && selfName ? selfName : wn0;
     const who = h('div', { class: 'vd-part' }, [h('div', { class: 'vd-k' }, 'Who'), h('div', { class: `vd-who vd-who-${v.tier}` }, [icon(wi), h('span', {}, wn)])]);
     const when = h('div', { class: 'vd-part' }, [h('div', { class: 'vd-k' }, 'When'), h('div', { class: 'vd-when' }, [icon('clock'), h('span', {}, reach ? 'In seconds' : 'Now')])]);
     box.append(h('div', { class: 'vd-row' }, [what, why, who, when]));

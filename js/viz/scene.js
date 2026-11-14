@@ -62,7 +62,7 @@ export function createScene(container, { onMission, onCompare } = {}) {
       const left = oneWayS * 2 * (1 - k);
       const text = k >= 1 ? `Answer arrives after ${mmss(oneWayS * 2)} · crew already acted`
         : out ? `Reaches Earth in ${mmss(left - oneWayS)} · answer back in ${mmss(left)}` : `Answer back in ${mmss(left)}`;
-      clock.replaceChildren(icon('clock'), h('span', {}, text), h('span', { class: 'scn-tag' }, 'time compressed'));
+      clock.replaceChildren(icon('clock'), h('span', {}, text), h('span', { class: 'scn-tag', title: 'The real delay is shown sped up' }, `${Math.round(oneWayS * 2 / 60)} min shown in ${Math.round(D / 1000)} s`));
     };
     draw(0);
     timer = setInterval(() => {
@@ -73,7 +73,8 @@ export function createScene(container, { onMission, onCompare } = {}) {
     }, 40);
   }
 
-  function update({ missions, mission: m, v, compare = false, compareRows = [], replay = '' }) {
+  function update({ missions, mission: m, v, compare = false, compareRows = [], replay = '', selfName = '' }) {
+    if (selfName) nodes.self.querySelector('.scn-name').textContent = selfName;
     sw.replaceChildren(...missions.map((mi) => h('button', {
       type: 'button', class: `scn-ms${mi.id === m.id ? ' on' : ''}`, role: 'radio', 'aria-checked': String(mi.id === m.id),
       'data-mission': mi.id, title: `Care: ${mi.careLabel}`, onclick: () => onMission?.(mi.id),
