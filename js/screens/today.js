@@ -8,11 +8,13 @@ import { renderSignal } from '../viz/signal.js';
 import { renderTimeline } from '../viz/timeline.js';
 import { renderWhy } from './why.js';
 import { nextCrossings } from '../engine/forecast.js';
+import { renderSuit } from './suit.js';
 import { SIGNAL_LABEL } from '../data/explain.js';
 
 let hintsSeen = false;
 let tlCache = null;
-export const resetTimeline = () => { tlCache = null; };
+let suitCache = null;
+export const resetTimeline = () => { tlCache = null; suitCache = null; };
 
 export function renderToday(root, hooks = {}) {
   const p = person();
@@ -77,6 +79,17 @@ export function renderToday(root, hooks = {}) {
     });
   }
   tlCache = { personId: p.id, node: tl, day: state.day };
+  // Suit stream keeps running across re-renders for the same person and day.
+  const suitKey = `${p.id}|${state.day}`;
+  if (!suitCache || suitCache.key !== suitKey) {
+    const node = h('div', { class: 'suit-box' });
+    suitCache = { key: suitKey, node };
+    extra.append(node);
+    renderSuit(node, { record: verdictFor().records.find((r) => r.day === state.day), seed: state.day, onAlert: () => {} });
+  } else {
+    extra.append(suitCache.node);
+  }
+
   if (state.system) {
     const whyBox = h('div', { class: 'why-box' });
     verdict.after(whyBox);

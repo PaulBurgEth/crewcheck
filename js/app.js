@@ -29,7 +29,7 @@ function readHash() {
 }
 
 export function go(route, patch = {}) {
-  if (patch.personId && patch.personId !== state.personId) resetTimeline();
+  if (route !== 'today' || (patch.personId && patch.personId !== state.personId)) resetTimeline();
   set({ ...patch, route, system: patch.system ?? null });
   history.replaceState(null, '', `#/${route}`);
   window.scrollTo(0, 0);
@@ -52,11 +52,11 @@ document.querySelector('.foot').append(' · ', h('button', { class: 'link', text
 
 Object.assign(state, readHash());
 subscribe(render);
-window.addEventListener('hashchange', () => { const p = readHash(); if (p.personId && p.personId !== state.personId) resetTimeline(); set({ system: null, ...p }); });
+window.addEventListener('hashchange', () => { const p = readHash(); if ((p.route && p.route !== 'today') || (p.personId && p.personId !== state.personId)) resetTimeline(); set({ system: null, ...p }); });
 render();
 
 // Screens added in later steps register themselves.
-const LATER = ['crew', 'checkin', 'trends', 'earth', 'sources'];
+const LATER = ['crew', 'checkin', 'trends'];
 for (const id of LATER) {
   import(`./screens/${id}.js`).then((mod) => { registerScreen(id, mod.default); if (state.route === id) render(); }).catch(() => {});
 }
