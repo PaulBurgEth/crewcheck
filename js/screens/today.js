@@ -10,6 +10,21 @@ import { renderWhy } from './why.js';
 import { nextCrossings } from '../engine/forecast.js';
 import { renderSuit } from './suit.js';
 import { SIGNAL_LABEL } from '../data/explain.js';
+import { renderRings } from '../viz/rings.js';
+import { renderRadiation } from './radiation-card.js';
+import { renderInstruments } from './instruments.js';
+import { findAdvice, PRECOMPUTED_LABEL } from '../data/advisor-precomputed.js';
+import { attachAdvice } from '../engine/advisor.js';
+import { evaluate } from '../engine/evaluate.js';
+import { getLiveAdvice } from './advisor-live.js';
+
+// Consecutive days with a check-in, counted back from the current day.
+function streakOf(records, day) {
+  let n = 0;
+  for (let d = day; d >= 1; d--) { const r = records[d - 1]; if (r && r.mood != null) n++; else break; }
+  return n;
+}
+const flagged = (ev) => Object.entries(ev.systems).filter(([, s]) => s.status === 'yellow' || s.status === 'red').map(([k]) => k).sort().join(',');
 
 let hintsSeen = false;
 let tlCache = null;
@@ -30,6 +45,7 @@ export function renderToday(root, hooks = {}) {
   const head = h('div', { class: 'today-head' }, [
     h('div', { class: 'who' }, [h('span', { class: 'who-name', text: p.name }), h('span', { class: 'who-role', text: p.role })]),
     h('div', { class: 'where', text: `Day ${state.day} · ${m.label}` }),
+    h('div', { class: 'day-rings', title: 'Rings: suit worn, check-in, exercise · centre: check-in streak in days' }),
   ]);
 
   const verdict = h('div', { class: `verdict v-${v.status}` }, [
@@ -53,8 +69,34 @@ export function renderToday(root, hooks = {}) {
     class: 'ahead-chip', title: 'Forecast: linear trend of the last 21 days', onclick: () => hooks.go?.('trends'),
   }, [confBadge('hypothesis'), h('span', { text: `${SIGNAL_LABEL[c.rule.signal][0]} → ${c.rule.value} in ~${c.daysToCross} d` })]))) : null;
 
-  side.append(verdict, forecastRow, switcher, nodesBox, signalBox, actions, extra);
-  root.append(head, h('div', { class: 'today-grid' }, [bodyBox, side]), tl);
+  // AI advises, rules decide: advice is shown next to the verdict and cannot change it.
+  const records = verdictFor().records;
+  const adv = findAdvice(p.id, state.day, flagged(ev), (d) => flagged(evaluate(records, d)));
+  const shown = attachAdvice(v, getLiveAdvice(p.id, state.day) || adv || {});
+  const advisor = h('div', { class: 'advisor' }, [
+    h('div', { class: 'adv-head' }, [h('span', { class: 'adv-title', text: 'AI advisor' }), confBadge('hypothesis'),
+      h('span', { class: 'adv-origin', text: shown.advice.origin === 'live' ? 'AI-generated (Claude), live' : PRECOMPUTED_LABEL })]),
+    shown.advice.text ? h('div', { class: 'adv-text', text: shown.advice.text }) : h('div', { class: 'muted', text: v.status === 'green' ? 'Nothing to add today' : 'No advice for this day · rules still decide' }),
+    shown.advice.points.length ? h('ul', { class: 'adv-points' }, shown.advice.points.map((t) => h('li', { text: t }))) : null,
+    h('div', { class: 'adv-note', text: 'Advises only · never changes status or who acts · in this demo it runs on a cloud model; on a mission it would run on board' }),
+  ]);
+
+  side.append(...[verdict, forecastRow, switcher, nodesBox, signalBox, actions, advisor, extra].filter(Boolean));
+  const lower = h('div', { class: 'today-lower' }, [h('div', { class: 'rad-box' }), h('div', { class: 'ins-box' })]);
+  root.append(head, h('div', { class: 'today-grid' }, [bodyBox, side]), tl, lower);
+  renderRadiation(lower.children[0], { records, day: state.day });
+  renderInstruments(lower.children[1], { day: state.day });
+
+  const today = records[state.day - 1] || {};
+  const streak = streakOf(records, state.day);
+  renderRings(head.querySelector('.day-rings'), {
+    size: 60, center: `${streak}d`,
+    rings: [
+      { label: 'Suit worn', value: today.hr != null ? 1 : 0, color: 'var(--green)' },
+      { label: 'Check-in', value: today.mood != null ? 1 : 0, color: 'var(--blue)' },
+      { label: 'Exercise', value: Math.min(1, (today.exerciseMin || 0) / 90), color: 'var(--yellow)' },
+    ],
+  });
 
   if (!hintsSeen) {
     const hints = h('div', { class: 'hints' }, [
