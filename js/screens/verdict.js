@@ -75,7 +75,11 @@ export function renderVerdict(container, { ev, v, records, mission, onRule }) {
         sc.svg, sc.sparkSvg,
         h('span', { class: 'vd-sv' }, `${fmt(sc.now)} ${sc.unit}`),
       ]);
-    })]);
+    }), h('div', { class: 'vd-legend', 'aria-hidden': 'true' }, [
+      h('span', {}, [h('i', { class: 'lg-norm' }), 'personal norm']),
+      h('span', {}, [h('i', { class: 'lg-thr' }), 'threshold']),
+      h('span', {}, [h('i', { class: 'lg-now' }), 'now']),
+    ])]);
     const [wi, wn] = WHO[v.tier];
     const who = h('div', { class: 'vd-part' }, [h('div', { class: 'vd-k' }, 'Who'), h('div', { class: `vd-who vd-who-${v.tier}` }, [icon(wi), h('span', {}, wn)])]);
     const when = h('div', { class: 'vd-part' }, [h('div', { class: 'vd-k' }, 'When'), h('div', { class: 'vd-when' }, [icon('clock'), h('span', {}, reach ? 'In seconds' : 'Now')])]);
