@@ -20,7 +20,7 @@ import { findAdvice, PRECOMPUTED_LABEL, QUESTIONS } from '../data/advisor-precom
 import { attachAdvice } from '../engine/advisor.js';
 import { evaluate } from '../engine/evaluate.js';
 import { escalate } from '../engine/escalation.js';
-import { getLiveAdvice, requestLiveAdvice, PROXY_URL, livePayload } from './advisor-live.js';
+import { getLiveAdvice, requestLiveAdvice, PROXY_URL, livePayload, liveTried } from './advisor-live.js';
 import { story, renderStoryBar, decorate, currentStep } from './story.js';
 import { renderCase, renderAgentLog, noteIsOpen } from './case-card.js';
 
@@ -226,13 +226,14 @@ export function renderToday(root, hooks = {}) {
   clearTimeout(liveTimer);
   if (PROXY_URL && v.status !== 'green') {
     const wanted = [state.advisorOpen && 'explain', state.advisorOpen && advQ, noteIsOpen() && 'handover'].filter(Boolean)
-      .filter((q) => !getLiveAdvice(p.id, state.day, q));
+      .filter((q) => !getLiveAdvice(p.id, state.day, q) && !liveTried(p.id, state.day, q));
     if (wanted.length) {
       const day = state.day;
       liveTimer = setTimeout(() => {
         if (state.day !== day || state.personId !== p.id) return;
         const payload = livePayload(ev, v, m, records, fu);
-        for (const q of wanted) requestLiveAdvice(p.id, day, payload, () => set({}), q);
+        // One request at a time: the next one goes after this answer re-renders the screen.
+        requestLiveAdvice(p.id, day, payload, () => set({}), wanted[0]);
       }, 700);
     }
   }

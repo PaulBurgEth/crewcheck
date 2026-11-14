@@ -7,11 +7,11 @@ const MAX_BODY = 4096;
 const CACHE_MAX = 500;
 const SYSTEM_PROMPT = [
   'You are the explanation layer of an onboard crew health monitor on a space mission. Rules already decided the status and who acts; never change, question or soften them, and do not restate the status or tier.',
-  'Input is JSON: fired rules with signal, kind (abs = value, delta = points above the usual value, pct = percent change), measured, threshold, norm (the person\'s usual value), days (consecutive days the rule has fired), unit; optional linked = body systems that moved together; done = steps the onboard agent already took (remeasure, reminders, report, page = crew medic paged); checked = result of the countermeasure re-check per signal; question.',
+  'Input is JSON: fired rules with signal, kind (abs = value, delta = points above the usual value, pct = percent change), measured, threshold, norm (the person\'s usual value), days (consecutive days the rule has fired), since (mission day it started), unit; optional linked = body systems that moved together; done = steps the onboard agent already took (remeasure, reminders, report, page = crew medic paged); checked = result of the countermeasure re-check per signal; question.',
   'Use only these fields. Never invent numbers, causes or history. Do not comment on fields that are absent. If the numbers themselves are missing, say the data is limited.',
-  'Write like a calm colleague, in plain English, to the crew member (the medic for medic and handover). Do not start with the day or the status. When you give a number, set it against the usual value, for example "sleep 5.9 h against your usual 6.8 h", and say for how long. Mention only the most telling numbers, not every rule.',
+  'Write like a calm colleague, in plain English. Speak to the crew member, except for medic and handover: those speak to the crew medic and call the person "the crew member" (for example "the crew member\'s usual 116 mmHg"), never "you" or "your" for the patient. Do not start with the day or the status. When you give a number, set it against the usual value, for example "sleep 5.9 h against your usual 6.8 h", and say for how long. Mention only the most telling numbers, not every rule.',
   'No diagnosis. No medicines, supplements or doses.',
-  'By question. None: 2 sentences on what moved together and why the rules acted. why-now: 1-2 sentences on what crossed and since how many days. wait: 1-2 sentences: if nothing changes these signals stay off, the forecast view shows the trend; if checked is present say what the re-check showed. medic: 1 sentence on what the agent already did, then points with 2-3 things to check. handover: 3 sentences for the crew medic: what happened (with numbers), what is already done, what to check; include the re-check result if present.',
+  'By question. None: 2 sentences on what moved together and why the rules acted. why-now: 1-2 sentences that name which rule crossed its threshold and on which mission day (since) it started; do not repeat the general summary. wait: 1-2 sentences: if nothing changes these signals stay off, the forecast view shows the trend; if checked is present say what the re-check showed. medic: 1 sentence on what the agent already did, then points with 2-3 things to check. handover: 3 sentences for the crew medic: what happened (with numbers), what is already done, what to check; include the re-check result if present.',
   'Answer ONLY with JSON: {"text": string, "points": [string]}. text at most 300 characters. points: at most 3, each under 100 characters; use an empty list unless the question is medic or handover.',
 ].join(' ');
 
@@ -19,7 +19,7 @@ const KEYS = ['mission', 'day', 'tier', 'status', 'fired'];
 // Optional: one of three fixed questions from the app's buttons. Never free text.
 export const QUESTIONS = ['why-now', 'wait', 'medic', 'handover'];
 const OPTIONAL = ['question', 'linked', 'done', 'checked'];
-const FIRED_OPTIONAL = ['kind', 'norm', 'days', 'unit'];
+const FIRED_OPTIONAL = ['kind', 'norm', 'days', 'unit', 'since'];
 const SYSTEM_IDS = ['heart', 'lungs', 'eyes', 'sleep', 'mind', 'bones', 'metabolic'];
 const DONE_IDS = ['remeasure', 'reminders', 'report', 'page'];
 const SIGNAL_IDS = [...new Set(RULES.map((r) => r.signal))];
@@ -53,6 +53,7 @@ export function validatePayload(obj) {
     if ('kind' in f && f.kind !== rule.kind) return false;
     if ('norm' in f && f.norm !== null && !Number.isFinite(f.norm)) return false;
     if ('days' in f && !(Number.isInteger(f.days) && f.days >= 1 && f.days <= 180)) return false;
+    if ('since' in f && !(Number.isInteger(f.since) && f.since >= 1 && f.since <= 180)) return false;
     if ('unit' in f && !(typeof f.unit === 'string' && /^[a-zA-Z/%°0-9 ]{0,8}$/.test(f.unit))) return false;
     return true;
   });
