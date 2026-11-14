@@ -300,3 +300,11 @@
 .ag-d{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px}
 .ag-yes{color:var(--green);font-weight:800}.ag-no{color:var(--muted)}
 .ag-never{font-size:14px;margin-top:8px}
+.vd-k{display:flex;align-items:center;gap:6px}
+.vd-info{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--muted);background:none;color:var(--muted);font:italic 700 10px/1 Georgia,serif;padding:0;letter-spacing:0;text-transform:none}
+.vd-legend{display:none}
+.vd-why:hover .vd-legend,.vd-why:focus-within .vd-legend,.vd-info[aria-expanded=true]~* .vd-legend{display:flex}
+.vd-why:has(.vd-info[aria-expanded=true]) .vd-legend{display:flex}
+.cs-stages{grid-template-columns:auto auto auto auto auto;justify-content:start}
+.cs-st{display:inline-flex;align-items:center;gap:4px;padding:4px 7px}
+.cs-st .ic{width:14px;height:14px}

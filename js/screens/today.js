@@ -16,10 +16,10 @@ import { renderRadiation } from './radiation-card.js';
 import { renderInstruments } from './instruments.js';
 import { doseSummary } from '../engine/radiation.js';
 import { findAdvice, PRECOMPUTED_LABEL, QUESTIONS } from '../data/advisor-precomputed.js';
-import { attachAdvice, advisorPayload } from '../engine/advisor.js';
+import { attachAdvice } from '../engine/advisor.js';
 import { evaluate } from '../engine/evaluate.js';
 import { escalate } from '../engine/escalation.js';
-import { getLiveAdvice, requestLiveAdvice, PROXY_URL } from './advisor-live.js';
+import { getLiveAdvice, requestLiveAdvice, PROXY_URL, livePayload } from './advisor-live.js';
 import { story, renderStoryBar, decorate, currentStep } from './story.js';
 import { renderCase, renderAgentLog } from './case-card.js';
 
@@ -219,7 +219,7 @@ export function renderToday(root, hooks = {}) {
   lastStep = step;
 
   if (PROXY_URL && v.status !== 'green') {
-    const payload = advisorPayload(ev, v, m);
+    const payload = livePayload(ev, v, m, records);
     if (!getLiveAdvice(p.id, state.day)) requestLiveAdvice(p.id, state.day, payload, () => set({}));
     if (advQ && !getLiveAdvice(p.id, state.day, advQ)) requestLiveAdvice(p.id, state.day, payload, () => set({}), advQ);
     if (!getLiveAdvice(p.id, state.day, 'handover')) requestLiveAdvice(p.id, state.day, payload, () => set({}), 'handover');

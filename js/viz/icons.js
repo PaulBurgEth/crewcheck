@@ -31,6 +31,7 @@ const SHAPES = {
   scale: () => [p('M12 4v16M5 8h14M5 8l-3 6h6zM19 8l-3 6h6zM8 20h8')],
   clock: () => [el('circle', { ...P, cx: 12, cy: 12, r: 9 }), p('M12 7v5l3 2')],
   more: () => [p('M4 7h16M4 12h16M4 17h10')],
+  flag: () => [p('M5 21V4M5 4h11l-2 4 2 4H5')],
 };
 
 export function icon(name, cls = '') {

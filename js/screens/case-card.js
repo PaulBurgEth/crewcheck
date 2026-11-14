@@ -5,6 +5,7 @@ import { SYSTEMS } from '../data/rules.js';
 import { findHandover } from '../data/advisor-precomputed.js';
 
 const LABEL = Object.fromEntries(SYSTEMS.map((s) => [s.id, s.label]));
+const STAGE_ICON = { watch: 'eye', flag: 'flag', plan: 'form', act: 'spark', verify: 'shield' };
 const STAGE_WORD = { watch: 'Watch', flag: 'Flag', plan: 'Plan', act: 'Act', verify: 'Verify' };
 const cache = new WeakMap();
 const approved = new Map(); // `${person}:${caseId}:${actionId}` -> day approved (memory only, like check-ins)
@@ -19,9 +20,10 @@ export const casesFor = (records, strip) => {
 export function renderCase({ person, records, strip, v, mission, day, countermeasureDay, live, onChange, onLog, reveal = false }) {
   const c = caseOn(casesFor(records, strip), day);
   const stage = stageOf(c, day, countermeasureDay);
+  // Stages are icons; only the current one carries its word.
   const bar = h('ol', { class: 'cs-stages', 'aria-label': `Agent stage: ${STAGE_WORD[stage]}` }, STAGES.map((s) => h('li', {
-    class: `cs-st${s === stage ? ' on' : ''}${STAGES.indexOf(s) < STAGES.indexOf(stage) ? ' past' : ''}`,
-  }, STAGE_WORD[s])));
+    class: `cs-st${s === stage ? ' on' : ''}${STAGES.indexOf(s) < STAGES.indexOf(stage) ? ' past' : ''}`, title: STAGE_WORD[s],
+  }, [icon(STAGE_ICON[s]), s === stage ? h('span', { text: STAGE_WORD[s] }) : null])));
   const head = h('div', { class: 'cs-head' }, [icon('spark'), h('span', { class: 'cs-title', text: 'Onboard agent' }),
     h('button', { type: 'button', class: 'cs-log', onclick: onLog }, [icon('more'), h('span', { text: 'Log' })])]);
   const box = h('section', { class: `cs${reveal ? ' cs-reveal' : ''}`, 'data-spot': 'act' }, [head, bar]);
