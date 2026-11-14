@@ -173,7 +173,7 @@ export function renderToday(root, hooks = {}) {
   const ahead = nextCrossings(records, state.day)[0];
   if (ahead) {
     decideKids.push(h('button', { class: 'ahead-chip', title: 'Forecast: linear trend of daily values', onclick: () => hooks.go?.('trends') },
-      [confBadge('hypothesis'), h('span', { text: `${SIGNAL_LABEL[ahead.rule.signal][0]} → ${ahead.rule.value} in ~${ahead.daysToCross} d` })]));
+      [confBadge('hypothesis'), h('span', { text: `${SIGNAL_LABEL[ahead.rule.signal][0]} → ${ahead.rule.value} ~${ahead.daysToCross}d` })]));
   }
   shell.decide.replaceChildren(...decideKids);
 

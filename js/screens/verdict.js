@@ -47,6 +47,9 @@ function miniScale({ rule, status, records, day, base }) {
   return { svg: el('svg', { class: 'ms-svg', viewBox: `-6 0 ${W + 12} 30`, role: 'img', 'aria-label': `${label}: now ${fmt(now)} ${unit}, threshold ${fmt(thr)}, personal norm ${band ? `${fmt(band[0])} to ${fmt(band[1])}` : 'unknown'}` }, kids), sparkSvg, label, unit, now };
 }
 
+// Shown headline: who acts is already in WHO and the scene, so linked signals read as a count.
+export const headlineText = (v) => (/^Linked signals/.test(v.headline) && v.combos?.length ? `${v.combos[0].systems.length} linked signals` : v.headline);
+
 // "Decided by rules": what moved, why (scales), who acts, when Earth can answer.
 export function renderVerdict(container, { ev, v, records, mission, onRule, selfName = '' }) {
   const fired = [];
@@ -61,7 +64,7 @@ export function renderVerdict(container, { ev, v, records, mission, onRule, self
   const line = h('div', { class: 'vd-line' }, [
     ev.liveAlert ? h('span', { class: `vd-live lc-${ev.liveAlert.level}` }, [icon('suit'), h('span', {}, `Suit · ${SIGNAL_LABEL[ev.liveAlert.signal][0]} ${ev.liveAlert.measured}`)]) : null,
     // Who acts is already in WHO and the distance scene; the headline names what happened.
-    h('span', { class: 'vd-headline' }, /^Linked signals/.test(v.headline) && v.combos?.length ? `${v.combos[0].systems.length} linked signals` : v.headline),
+    h('span', { class: 'vd-headline' }, headlineText(v)),
   ]);
   const box = h('section', { class: `vd v-${v.status}`, 'data-spot': 'rules' }, [head, line]);
 

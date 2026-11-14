@@ -6,6 +6,7 @@ const filled = (v) => v !== '' && v != null;
 import { validateCheckin } from '../engine/validate.js';
 import { renderDayRing, renderPatch } from '../viz/badges.js';
 import { nextMeasurements } from './instruments.js';
+import { headlineText } from './verdict.js';
 import { icon } from '../viz/icons.js';
 
 const NEXT_ICON = { 'Cognition tests': 'brain', Questionnaires: 'form', 'Periodic exams': 'drop' };
@@ -97,8 +98,8 @@ export default function render(root, { go } = {}) {
     status.append(
       h('div', { class: `ci-saved${v.status === 'red' ? ' ci-res-red' : ''}`, role: 'status' }, [
         renderPatch({ done: crewDone, names: state.crew.map((c) => c.name), size: 44, flash: crewDone.every(Boolean) }),
-        h('span', { class: 'ci-saved-t', text: v.status === 'red' ? `Saved · ${v.headline}` : 'Saved · day closed' }),
-        h('button', { type: 'button', class: 'ci-btn ci-ghost', onclick: () => go && go('today'), text: v.status === 'green' ? 'Monitor: all clear' : `Monitor: ${v.headline}` }),
+        h('span', { class: 'ci-saved-t', text: v.status === 'red' ? `Saved · ${headlineText(v)}` : 'Saved · day closed' }),
+        h('button', { type: 'button', class: 'ci-btn ci-ghost', onclick: () => go && go('today'), text: v.status === 'green' ? 'Monitor: all clear' : `Monitor: ${headlineText(v)}` }),
       ]),
     );
   }
