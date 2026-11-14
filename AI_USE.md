@@ -11,6 +11,7 @@ Log of where AI was used, kept from the first hour of the build.
 - **AI advisor.** The advisor panel explains signals in plain language. It never sets status or escalation: rules decide.
 - **Precomputed answers** (`js/data/advisor-precomputed.js`) are marked "AI-generated (Claude), precomputed".
 - The advisor receives only structured data (fired rules and numbers), never free text.
+- The three advisor questions ("Why now?", "What if I wait?", "What should the medic check?") are fixed buttons. Their precomputed answers were written by Claude from the same structured data and are labelled "AI-generated (Claude), precomputed". There is no free text input; the live proxy accepts only these three question ids.
 
 ## Not AI
 - No AI-generated images. The body figure and icons are hand-written SVG.

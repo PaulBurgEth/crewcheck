@@ -1,6 +1,8 @@
 import { h } from './ui.js';
 import { state, set, subscribe, resetDemo } from './state.js';
 import { renderToday, resetTimeline } from './screens/today.js';
+import { story, startStory, stopStory, setStoryListener } from './screens/story.js';
+import { icon } from './viz/icons.js';
 
 const SCREENS = [
   { id: 'crew', label: 'Crew' },
@@ -22,7 +24,8 @@ function readHash() {
   const [route, query] = location.hash.replace(/^#\/?/, '').split('?');
   const q = new URLSearchParams(query || '');
   const patch = {};
-  if (route && SCREENS.some((s) => s.id === route)) patch.route = route;
+  if (route === 'explore' || route === 'story') patch.route = 'today';
+  else if (route && SCREENS.some((s) => s.id === route)) patch.route = route;
   if (q.get('p') && state.crew.some((c) => c.id === q.get('p'))) patch.personId = q.get('p');
   const d = Number(q.get('d'));
   if (Number.isInteger(d) && d >= 1 && d <= 180) patch.day = d;
@@ -30,6 +33,7 @@ function readHash() {
 }
 
 export function go(route, patch = {}) {
+  if (story.on && (route !== 'today' || patch.personId)) stopStory();
   if (route !== 'today' || (patch.personId && patch.personId !== state.personId)) resetTimeline();
   set({ ...patch, route, system: patch.system ?? null });
   history.replaceState(null, '', `#/${route}`);
@@ -43,8 +47,9 @@ function render() {
   }, s.label)));
   const fn = renderers[state.route];
   const scrollY = window.scrollY;
-  if (fn?.persistent) fn(app, { go });
-  else {
+  // A persistent screen keeps its DOM, so the page does not jump and a smooth scroll is not cancelled.
+  if (fn?.persistent) { fn(app, { go }); return; }
+  {
     app.replaceChildren();
     if (fn) fn(app, { go });
     else if (failed.has(state.route)) app.append(h('div', { class: 'boot-fail' }, [h('p', { text: 'This screen did not load.' }), h('button', { type: 'button', text: 'Reload', onclick: () => location.reload() })]));
@@ -53,13 +58,27 @@ function render() {
   window.scrollTo(0, scrollY);
 }
 
-document.querySelector('.foot').append(' · ', h('button', { class: 'link', text: 'Reset demo', onclick: () => { resetTimeline(); resetDemo(); } }));
+// Replay story is always in the header; the story runs on the real monitor.
+document.querySelector('.top').insertBefore(h('button', { class: 'replay', type: 'button', onclick: () => { go('today'); startStory(); } }, [icon('replay'), h('span', { text: 'Replay story' })]), nav);
 
+// The story bar sticks right under the header (the header is sticky on wide screens only).
+const topBar = document.querySelector('.top');
+const setTopH = () => document.documentElement.style.setProperty('--top-h', `${getComputedStyle(topBar).position === 'sticky' ? topBar.offsetHeight : 0}px`);
+window.addEventListener('resize', setTopH);
+setTopH();
+
+document.querySelector('.foot').append(' · ', h('button', { class: 'link', text: 'Reset demo', onclick: () => { resetTimeline(); stopStory(); resetDemo(); } }));
+
+const [first, firstQuery] = location.hash.replace(/^#\/?/, '').split('?');
 Object.assign(state, readHash());
 subscribe(render);
-window.addEventListener('hashchange', () => { const p = readHash(); if ((p.route && p.route !== 'today') || (p.personId && p.personId !== state.personId)) resetTimeline(); set({ system: null, ...p }); });
+setStoryListener(render);
+window.addEventListener('hashchange', () => { if (story.on && !/^#\/?story/.test(location.hash)) stopStory(); const p = readHash(); if ((p.route && p.route !== 'today') || (p.personId && p.personId !== state.personId)) resetTimeline(); set({ system: null, ...p }); });
 window.ccBooted = true;
-render();
+// First visit opens the story; #/explore (or any other screen link) opens the app directly.
+// #/story?step=4 opens a given step (for review links).
+if (first === 'story' || ((first === '' || first === 'today') && !firstQuery)) startStory({ step: (Number(new URLSearchParams(firstQuery || '').get('step')) || 1) - 1 });
+else render();
 
 // Screens added in later steps register themselves.
 const LATER = ['crew', 'checkin', 'trends', 'earth', 'sources'];

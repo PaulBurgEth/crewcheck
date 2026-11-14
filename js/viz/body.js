@@ -101,7 +101,19 @@ const ZONES = [
   },
 ];
 
-export function renderBody(container, { systems = {}, selected = null, onSelect } = {}) {
+// Linked signals: a line through the centres of the zones that moved together.
+function linkEls(links) {
+  const pts = links.map((id) => ZONES.find((z) => z.id === id)?.ring).filter(Boolean).map(([x, y]) => [x, y]);
+  if (pts.length < 2) return [];
+  const d = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x} ${y}`).join(' ');
+  const [lx, ly] = pts[pts.length - 1];
+  return [
+    el('path', { class: 'cc-link', d, fill: 'none' }),
+    el('text', { class: 'cc-link-t', x: Math.min(lx + 60, 300), y: ly + 52, 'text-anchor': 'middle' }, `${pts.length} linked signals`),
+  ];
+}
+
+export function renderBody(container, { systems = {}, selected = null, onSelect, links = [] } = {}) {
   clear(container);
   container.classList.add('cc-body');
   const id = `ccglow${++uid}`;
@@ -183,6 +195,7 @@ export function renderBody(container, { systems = {}, selected = null, onSelect 
     defs,
     el('ellipse', { cx: 150, cy: 300, rx: 190, ry: 300, fill: `url(#${haloId})` }),
     body,
+    ...linkEls(links),
     ...zoneEls,
   ]);
   container.append(svg);

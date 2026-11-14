@@ -5,9 +5,11 @@ import { MISSIONS } from '../js/data/missions.js';
 
 const MAX_BODY = 4096;
 const CACHE_MAX = 500;
-const SYSTEM_PROMPT = 'You explain to an astronaut, in plain English, why a health rule check fired. Input is JSON with mission, day, tier, status and the fired rules (signal, measured value, threshold). Write at most 2 short sentences and up to 3 short points. Never diagnose. Never mention drugs or doses. Never change the status or who acts. Answer ONLY with JSON: {"text": string, "points": [string]}.';
+const SYSTEM_PROMPT = 'You explain to an astronaut, in plain English, why a health rule check fired. Input is JSON with mission, day, tier, status and the fired rules (signal, measured value, threshold). Write at most 2 short sentences and up to 3 short points. Never diagnose. Never mention drugs or doses. Never change the status or who acts. If a "question" field is present (why-now: why this fired today; wait: what happens if the crew waits; medic: what the crew medic should check), answer that question in "text" and keep points short. Answer ONLY with JSON: {"text": string, "points": [string]}.';
 
 const KEYS = ['mission', 'day', 'tier', 'status', 'fired'];
+// Optional: one of three fixed questions from the app's buttons. Never free text.
+export const QUESTIONS = ['why-now', 'wait', 'medic'];
 const FIRED_KEYS = ['rule', 'signal', 'measured', 'threshold'];
 const sameKeys = (o, keys) => {
   const k = Object.keys(o);
@@ -16,7 +18,10 @@ const sameKeys = (o, keys) => {
 const isObj = (o) => o !== null && typeof o === 'object' && !Array.isArray(o);
 
 export function validatePayload(obj) {
-  if (!isObj(obj) || !sameKeys(obj, KEYS)) return false;
+  if (!isObj(obj)) return false;
+  if ('question' in obj) {
+    if (!QUESTIONS.includes(obj.question) || !sameKeys(obj, [...KEYS, 'question'])) return false;
+  } else if (!sameKeys(obj, KEYS)) return false;
   if (!MISSIONS.some((m) => m.id === obj.mission)) return false;
   if (!Number.isInteger(obj.day) || obj.day < 1 || obj.day > 180) return false;
   if (!['none', 'self', 'crew', 'earth'].includes(obj.tier)) return false;
