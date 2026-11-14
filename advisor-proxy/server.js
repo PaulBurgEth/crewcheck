@@ -54,7 +54,9 @@ export function makeCallModel({ apiKey, model }) {
       headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
         model,
-        max_tokens: 300,
+        // Haiku 5.5 thinks by default; a short explanation does not need it (allowed at effort medium).
+        thinking: { type: 'disabled' },
+        max_tokens: 600,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: JSON.stringify(payload) }],
       }),
@@ -62,7 +64,9 @@ export function makeCallModel({ apiKey, model }) {
     });
     if (!res.ok) throw new Error(`upstream ${res.status}`);
     const data = await res.json();
-    return data?.content?.[0]?.text;
+    if (data?.stop_reason === 'refusal') throw new Error('refusal');
+    // Read the text block, not the first block: a thinking block may come first.
+    return (data?.content || []).find((c) => c?.type === 'text')?.text;
   };
 }
 
