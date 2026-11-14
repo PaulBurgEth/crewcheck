@@ -63,7 +63,7 @@ export function createScene(container, { onMission, onCompare } = {}) {
       const left = oneWayS * 2 * (1 - k);
       const text = k >= 1 ? `Answer arrives after ${mmss(oneWayS * 2)} · crew already acted`
         : out ? `Reaches Earth in ${mmss(left - oneWayS)} · answer back in ${mmss(left)}` : `Answer back in ${mmss(left)}`;
-      clock.replaceChildren(icon('clock'), h('span', {}, text), h('span', { class: 'scn-tag', title: 'The real delay is shown sped up' }, `${Math.round(oneWayS * 2 / 60)} min shown in ${Math.round(D / 1000)} s`));
+      clock.replaceChildren(icon('clock'), h('span', {}, text), h('span', { class: 'scn-tag', title: 'The real delay is shown sped up' }, D < 500 ? `${Math.round(oneWayS * 2 / 60)} min, shown at once` : `${Math.round(oneWayS * 2 / 60)} min shown in ${Math.round(D / 1000)} s`));
     };
     draw(0);
     timer = setInterval(() => {
