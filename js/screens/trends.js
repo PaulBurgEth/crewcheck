@@ -225,6 +225,26 @@ function draw(canvas, records, day, sig, base, info, colors) {
       },
     },
   });
+  drawIn(canvas, chart, day, num(records.find((r) => r.day === day)?.[sig.keys[0]]));
+}
+
+// Line draws left to right up to today, then the forecast opens; the today point pulses once.
+function drawIn(canvas, ch, day, todayValue) {
+  if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const box = canvas.parentElement;
+  const w = canvas.clientWidth || 1;
+  const x = ch.scales.x.getPixelForValue(day);
+  box.style.setProperty('--today', `${Math.max(0, Math.min(100, (x / w) * 100)).toFixed(1)}%`);
+  canvas.classList.remove('tr-draw');
+  void canvas.offsetWidth;
+  canvas.classList.add('tr-draw');
+  box.querySelector('.tr-ping')?.remove();
+  if (todayValue !== null) {
+    const ping = h('span', { class: 'tr-ping', 'aria-hidden': 'true' });
+    ping.style.left = `${x + canvas.offsetLeft}px`;
+    ping.style.top = `${ch.scales.y.getPixelForValue(todayValue) + canvas.offsetTop}px`;
+    box.append(ping);
+  }
 }
 
 export default function render(root, { go } = {}) {
