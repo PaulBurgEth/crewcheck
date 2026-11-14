@@ -2,14 +2,14 @@ import { el, h, clear } from './svg.js';
 
 const COLORS = { green: 'var(--green)', yellow: 'var(--yellow)', red: 'var(--red)', grey: '#3a4560' };
 
-export function renderTimeline(container, { days = 180, day = 1, statuses = [], events = [], onChange } = {}) {
+export function renderTimeline(container, { days = 180, day = 1, statuses = [], events = [], onChange, extra = null } = {}) {
   clear(container);
   container.classList.add('cc-tl');
   let cur = Math.min(days, Math.max(1, Math.round(day)));
   const pos = (d) => (days > 1 ? ((d - 1) / (days - 1)) * 100 : 0);
 
   const num = h('span', { class: 'cc-tl-num' }, String(cur));
-  const head = h('div', { class: 'cc-tl-head' }, [h('span', { class: 'cc-tl-day' }, 'Day '), num]);
+  const head = h('div', { class: 'cc-tl-head' }, [h('span', { class: 'cc-tl-day' }, 'Day '), num, extra]);
 
   const strip = el('svg', {
     class: 'cc-tl-strip', viewBox: `0 0 ${days} 1`, preserveAspectRatio: 'none', 'aria-hidden': 'true',
@@ -23,7 +23,7 @@ export function renderTimeline(container, { days = 180, day = 1, statuses = [], 
       type: 'button', class: 'cc-tl-ev' + (p < 12 ? ' cc-l' : p > 88 ? ' cc-r' : ''),
       style: `left:${p}%`, 'aria-label': `Day ${e.day}: ${e.label}`,
       onclick: () => setDay(e.day, true),
-    }, [h('span', { class: 'cc-tl-tick' }), h('span', { class: 'cc-tl-evl' }, e.label)]);
+    }, [e.icon ? h('span', { class: 'cc-tl-evi' }, [e.icon]) : null, h('span', { class: 'cc-tl-tick' }), h('span', { class: 'cc-tl-evl' }, e.label)]);
     return { e, b };
   });
 

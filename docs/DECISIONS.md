@@ -13,3 +13,10 @@ Architecture source: NASA_SpaceApps_2026_ARCHITECTURE.md (approved 14.11.2026), 
 - **Advisor**: precomputed answers (Claude) for story days; optional live proxy, off by default (`PROXY_URL` empty). Advice is frozen next to the verdict and cannot change it (test).
 - **Service worker**: network first, cache fallback, versioned cache name.
 - **Hero name**: Maya Okafor (fictional). Alternatives offered: Lena Varga, Tomas Reyes.
+
+## UX v2: demo as a story (14.11.2026)
+- **What**: story mode (6 steps on the real app state, Play ~40 s, `#/explore` skips it, `#/story?step=N` opens a step), full-width distance scene (line length by delay, envelope with compressed countdown, Compare near/deep), "Decided by rules" verdict with mini-scales (personal norm band = mean ± 1 SD of days 1-14, threshold, current value, 3-day spark), three columns Sense / Decide / Act, icon+word confidence badges (Proven / Hypothesis / Ask medic), action cards, advisor bubble with three fixed questions, sources strip (tap lights body zones), radiation and instruments moved to a drawer.
+- **Why**: Paul's feedback on the live screen: looked like another health dashboard, unclear what to press, too much text. Brief `crewcheck_ux_v2_brief.md`.
+- **Engine, rules, generator, thresholds untouched.** The norm band on the mini-scale is computed in the UI from the same 14-day window.
+- **Fragile**: scene animation uses a timer (works in background tabs); CSS transitions on line length need a rendering browser. Word budget: about 40 words outside value labels on the main screen; measured with a script, depends on the day.
+- **Rejected**: a separate wizard page (would fake states); free text to the advisor.

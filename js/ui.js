@@ -1,3 +1,4 @@
+import { icon } from './viz/icons.js';
 // Small DOM helpers for screens. Text always via textContent.
 export function h(tag, attrs = {}, children = []) {
   const n = document.createElement(tag);
@@ -12,11 +13,12 @@ export function h(tag, attrs = {}, children = []) {
   return n;
 }
 
+// Confidence of a statement: a picture and one word, never a lone letter.
 export const CONF = {
-  established: { letter: 'E', label: 'Established: NASA source or clinical norm' },
-  hypothesis: { letter: 'H', label: 'Hypothesis: trend or model, confirm with a repeat measure' },
-  ask: { letter: 'A', label: 'Ask: decision for the crew medic or flight surgeon' },
+  established: { icon: 'shield', word: 'Proven', label: 'Proven: NASA source or clinical norm' },
+  hypothesis: { icon: 'flask', word: 'Hypothesis', label: 'Hypothesis: trend or model, confirm with a repeat measure' },
+  ask: { icon: 'person', word: 'Ask medic', label: 'Ask medic: decision for the crew medic or flight surgeon' },
 };
-export const confBadge = (c) => h('span', { class: `conf conf-${c}`, title: CONF[c].label, 'aria-label': CONF[c].label, text: CONF[c].letter });
+export const confBadge = (c) => h('span', { class: `conf conf-${c}`, title: CONF[c].label }, [icon(CONF[c].icon), h('span', { class: 'conf-w', text: CONF[c].word })]);
 
 export const STATUS_WORD = { green: 'OK', yellow: 'Watch', red: 'Act', grey: 'No data' };

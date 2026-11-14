@@ -1,6 +1,6 @@
 // Offline support: the whole app is cached so it opens again without any network.
 // Bump VERSION on every release so judges never get a stale copy.
-const VERSION = 'crewcheck-v5';
+const VERSION = 'crewcheck-v6';
 const FILES = [
   './',
   './css/app.css',
@@ -9,6 +9,7 @@ const FILES = [
   './css/earth.css',
   './css/sources.css',
   './css/trends.css',
+  './css/v2.css',
   './css/viz.css',
   './favicon.svg',
   './index.html',
@@ -38,16 +39,20 @@ const FILES = [
   './js/screens/radiation-card.js',
   './js/screens/sources.js',
   './js/screens/suit.js',
+  './js/screens/story.js',
   './js/screens/today.js',
+  './js/screens/verdict.js',
   './js/screens/trends.js',
   './js/screens/why.js',
   './js/sensor/stream.js',
   './js/state.js',
   './js/ui.js',
   './js/viz/body.js',
+  './js/viz/icons.js',
   './js/viz/live.js',
   './js/viz/nodes.js',
   './js/viz/rings.js',
+  './js/viz/scene.js',
   './js/viz/signal.js',
   './js/viz/svg.js',
   './js/viz/timeline.js',
