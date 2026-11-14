@@ -83,7 +83,7 @@ function linkPicture(m, entries) {
     stop();
     line.querySelectorAll('.ea-env').forEach((n) => n.remove());
     const still = reduced() || !entries.length;
-    tag.textContent = !entries.length ? 'Nothing sent' : still ? 'Motion off' : L.far ? `${Math.round(L.oneWayS / 60)} min shown in ${(L.roundMs / 1000).toFixed(1)} s` : 'Arrives at once';
+    tag.textContent = !entries.length ? 'Nothing sent' : still ? 'Motion off' : L.far ? `${Math.round(L.oneWayS / 60)} min → ${(L.roundMs / 1000).toFixed(1)} s` : 'Arrives at once';
     board.replaceChildren(...(still ? [] : entries.map(chip)));
     landed.replaceChildren(...(still ? entries.map(chip) : []));
     if (still) return;
@@ -105,7 +105,7 @@ function linkPicture(m, entries) {
           landed.append(chip(e));
           const ea = band.querySelector('.ea-earth');
           ea.classList.add('ea-hit');
-          setTimeout(() => ea.classList.remove('ea-hit'), 450);
+          setTimeout(() => ea.classList.remove('ea-hit'), 800);
         }
       }, 40);
       timers.push(id);

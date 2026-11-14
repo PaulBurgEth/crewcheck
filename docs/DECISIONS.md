@@ -33,3 +33,4 @@ Architecture source: NASA_SpaceApps_2026_ARCHITECTURE.md (approved 14.11.2026), 
 - **Why**: QA proposal Г8; "AI does not decide" must be visible at a glance, not read in a sentence.
 - **How**: HTML grid/flex with small inline SVG arrows and the shared icon set (reflows to 375 px; vertical chain under 640 px). Agent lists come from `js/engine/agent.js` exports, so the picture cannot drift from the agent's real limits.
 - **Rejected**: one fixed-size SVG (no reflow); AI as a fourth box in the chain (reads as if AI is a decision step).
+- **QA fixes (v19)**: Forecast → Verdict arrow dashed (yellow), caption "warns, never decides"; arrows to AI 34 px, cross thicker; Earth glow on landing longer (0.8 s) with a small scale; speed tag "20 min → 3.2 s" (five-word rule).
