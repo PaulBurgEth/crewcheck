@@ -3,7 +3,7 @@ export const MISSIONS = [
   { id: 'iss', label: 'ISS', place: 'Low Earth orbit', oneWayMin: 0, careLabel: 'hours home', delaySource: 'demo-assumption', careSource: 'demo-assumption' },
   { id: 'moon', label: 'Moon', place: 'Lunar orbit', oneWayMin: 1.3 / 60, careLabel: '~3 days home', delaySource: 'demo-assumption', careSource: 'demo-assumption' },
   { id: 'mars-transit', label: 'Mars transit', place: 'Deep space', oneWayMin: 20, careLabel: 'months home', delaySource: 'nasa-distance', careSource: 'nasa-distance' },
-  { id: 'mars', label: 'Mars surface', place: 'Mars', oneWayMin: 20, careLabel: 'launch window home', delaySource: 'nasa-distance', careSource: 'demo-assumption' },
+  { id: 'mars', label: 'Mars surface', place: 'Mars', oneWayMin: 20, careLabel: 'launch window home', tabNote: 'launch-window return', delaySource: 'nasa-distance', careSource: 'demo-assumption' },
 ];
 
 export const DEFAULT_MISSION = 'mars-transit';

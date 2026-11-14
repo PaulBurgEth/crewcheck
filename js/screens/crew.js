@@ -2,6 +2,7 @@ import { h } from '../ui.js';
 import { state, mission, verdictFor, recordsOf, localEntry, statusStrip } from '../state.js';
 import { evaluate } from '../engine/evaluate.js';
 import { el } from '../viz/svg.js';
+import { icon } from '../viz/icons.js';
 import { personIndex, crewIndex, indexColor } from '../engine/score.js';
 import { renderRings } from '../viz/rings.js';
 import { renderPatch } from '../viz/badges.js';
@@ -73,8 +74,8 @@ export default function renderCrew(root, { go }) {
   const patch = h('div', { class: 'crew-patch' });
   const head = h('div', { class: 'crew-head' }, [
     h('div', {}, [h('div', { class: 'crew-title', text: `Crew · Day ${state.day}` }), h('div', { class: 'muted', text: `${m.label} · ${m.careLabel}` })]),
-    h('div', { class: `crew-index i-${indexColor(cIdx)}`, title: 'CrewCheck Index (formula on Sources)' }, [h('span', { class: 'ci-num', text: cIdx ?? '–' }), h('span', { class: 'ci-lab', text: 'Crew index' }), indexStrip(state.day), h('span', { class: 'ci-sub', text: '100 = all systems normal · formula in Sources' })]),
-    h('div', { class: 'crew-patch-wrap' }, [patch, h('div', { class: 'ci-sub', text: doneCount === 4 ? 'Crew patch complete: all checked in today' : `Crew patch: ${doneCount} of 4 checked in` })]),
+    h('div', { class: `crew-index i-${indexColor(cIdx)}`, title: 'CrewCheck Index (formula on Sources)' }, [h('span', { class: 'ci-num', text: cIdx ?? '–' }), h('span', { class: 'ci-lab', text: 'Crew index' }), indexStrip(state.day), h('span', { class: 'ci-sub' }, [h('span', { text: '100 = all normal' }), h('a', { href: '#/sources', class: 'ci-src', title: 'Formula on Sources', 'aria-label': 'Formula on Sources' }, [icon('rule')])])]),
+    h('div', { class: 'crew-patch-wrap' }, [patch, h('div', { class: 'ci-sub', text: doneCount === 4 ? 'Crew patch complete' : `Crew patch: ${doneCount} of 4 checked in` })]),
   ]);
   root.append(head);
   countUp(head.querySelector('.ci-num'), 'crew', cIdx);
