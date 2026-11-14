@@ -72,7 +72,12 @@ function topBand() {
   const dots = h('span', { class: 'so-dg-dots', 'aria-hidden': 'true' }, ['green', 'yellow', 'red'].map((c) => h('i', { class: `dot d-${c}` })));
   const verdict = dgNode('so-dg-verdict', 'flag', 'Verdict', 'status, who acts', dots);
   const ai = dgNode('so-dg-ai', 'spark', 'AI explains', 'reads, never decides');
-  const aiLink = h('div', { class: 'so-dg-link' }, [dgArrow('down', true), h('span', { text: 'never changes the verdict' })]);
+  // Down: AI reads the verdict. Up, crossed out: nothing flows back from AI into the verdict.
+  const blocked = el('svg', { class: 'so-dg-arr so-dg-block', viewBox: '0 0 24 24', 'aria-hidden': 'true' }, [
+    el('path', { d: 'M12 21V7M7 12l5-5 5 5', fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }),
+    el('path', { d: 'M4 4l16 16', fill: 'none', stroke: 'var(--red)', 'stroke-width': 2.4, 'stroke-linecap': 'round' }),
+  ]);
+  const aiLink = h('div', { class: 'so-dg-link' }, [dgArrow('down', true), blocked, h('span', { text: 'never changes the verdict' })]);
   const chain = h('div', { class: 'so-dg-chain' }, [
     dgNode('so-dg-rules', 'rule', 'Rules decide', 'status and tier'),
     dgArrow('flow'),
@@ -97,7 +102,7 @@ function topBand() {
     ]),
   ]);
   const diagram = h('div', {
-    class: 'so-dg', role: 'img',
+    class: 'so-dg', role: 'group',
     'aria-label': 'Rules decide, forecast warns, verdict; AI explains on the side and never changes the verdict. The onboard agent acts on rules.',
   }, [chain, agent]);
   const legend = h('div', { class: 'so-legend' }, ['established', 'hypothesis', 'ask'].map((c) =>

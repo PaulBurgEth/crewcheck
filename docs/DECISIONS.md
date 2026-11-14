@@ -20,3 +20,9 @@ Architecture source: NASA_SpaceApps_2026_ARCHITECTURE.md (approved 14.11.2026), 
 - **Engine, rules, generator, thresholds untouched.** The norm band on the mini-scale is computed in the UI from the same 14-day window.
 - **Fragile**: scene animation uses a timer (works in background tabs); CSS transitions on line length need a rendering browser. Word budget: about 40 words outside value labels on the main screen; measured with a script, depends on the day.
 - **Rejected**: a separate wizard page (would fake states); free text to the advisor.
+
+## G8: Sources overview as a picture (14.11.2026)
+- **What**: the Overview panel of Sources shows the decision chain as icon nodes "Rules decide → Forecast warns → Verdict". "AI explains" sits off the chain under the verdict: a dashed arrow from the verdict down to AI (AI reads), a crossed-out arrow back up (nothing flows from AI into the verdict), label "never changes the verdict". Beside it, the onboard agent with "Can" (`AGENT_CAPS`) and "Cannot" (`AGENT_NEVER`), tagged "design assumption", "acts on rules". Tables below unchanged.
+- **Why**: QA proposal Г8; "AI does not decide" must be visible at a glance, not read in a sentence.
+- **How**: HTML grid/flex with small inline SVG arrows and the shared icon set (reflows to 375 px; vertical chain under 640 px). Agent lists come from `js/engine/agent.js` exports, so the picture cannot drift from the agent's real limits.
+- **Rejected**: one fixed-size SVG (no reflow); AI as a fourth box in the chain (reads as if AI is a decision step).
