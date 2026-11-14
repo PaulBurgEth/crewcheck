@@ -16,7 +16,7 @@ export function streakInfo(records, day) {
 
 export function renderStreak(records, day) {
   const { n, missed, week } = streakInfo(records, day);
-  return h('span', { class: 'stk', title: missed ? `Check-in streak ${n} days · missed day ${missed}` : `Check-in streak ${n} days` }, [
+  return h('span', { class: 'stk', title: `Check-in streak ${n} ${n === 1 ? 'day' : 'days'}${missed ? ` · missed day ${missed}` : ''}` }, [
     h('span', { class: 'stk-dots', 'aria-hidden': 'true' }, week.map((w) => h('i', { class: w === null ? 'stk-x' : w ? 'stk-on' : 'stk-off' }))),
     h('b', { class: 'stk-n' }, `${n}d`), ' streak',
     missed ? h('span', { class: 'stk-miss' }, ` · missed day ${missed}`) : null,
