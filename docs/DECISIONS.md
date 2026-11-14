@@ -21,6 +21,13 @@ Architecture source: NASA_SpaceApps_2026_ARCHITECTURE.md (approved 14.11.2026), 
 - **Fragile**: scene animation uses a timer (works in background tabs); CSS transitions on line length need a rendering browser. Word budget: about 40 words outside value labels on the main screen; measured with a script, depends on the day.
 - **Rejected**: a separate wizard page (would fake states); free text to the advisor.
 
+## G7: Earth screen as one picture (14.11.2026)
+- **What**: the Earth screen opens with one ship → Earth line. Each downlink message (D107, D108–110 …) is an envelope in its verdict colour that leaves "On board", travels the line and lands "At Earth" (Earth glows on landing). A distance switch (ISS, Moon, Mars transit, Mars surface) on the screen changes the global mission, the line length, the travel time and the "Sent / Lands" clock. "Send again" replays. The message log stays below, folded in `<details>`. Copy report unchanged.
+- **Why**: QA proposal Г7; Paul rated far screens visually weak. Four identical "Sent · Earth · Reply" rows did not show the delay.
+- **Reuse, not a second implementation**: `js/viz/scene.js` now exports `linkOf(m)` (line length + compressed travel time), `shipSvg`, `earthSvg`, `reduced`, `mmss`; the Monitor scene uses `linkOf` for the same values it had before (behaviour unchanged). `js/viz/signal.js` is no longer used by any screen.
+- **Motion**: timers, not rAF (works in background tabs); with `prefers-reduced-motion` every envelope is shown landed, tag "Motion off".
+- **Fragile**: the travel time is compressed (20 min shown in 3.2 s; ISS/Moon 0.7 s), stated on the screen. Envelopes fly with a fixed stagger; with many messages they queue on board.
+- **Rejected**: one big fixed-size SVG (does not reflow to 375 px); per-envelope real-time ratios (Moon 1.3 s vs Mars 20 min is invisible on any one scale).
 ## G8: Sources overview as a picture (14.11.2026)
 - **What**: the Overview panel of Sources shows the decision chain as icon nodes "Rules decide → Forecast warns → Verdict". "AI explains" sits off the chain under the verdict: a dashed arrow from the verdict down to AI (AI reads), a crossed-out arrow back up (nothing flows from AI into the verdict), label "never changes the verdict". Beside it, the onboard agent with "Can" (`AGENT_CAPS`) and "Cannot" (`AGENT_NEVER`), tagged "design assumption", "acts on rules". Tables below unchanged.
 - **Why**: QA proposal Г8; "AI does not decide" must be visible at a glance, not read in a sentence.
