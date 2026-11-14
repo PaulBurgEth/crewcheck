@@ -10,11 +10,11 @@ export const STAGES = ['watch', 'flag', 'plan', 'act', 'verify'];
 // What the agent may do on its own at each distance (design assumption, see Sources).
 const MAY = {
   watch: { icon: 'eye', label: 'Watch signals' },
-  forward: { icon: 'envelope', label: 'Forward to Earth' },
+  forward: { icon: 'envelope', label: 'Notify Earth' },
   remeasure: { icon: 'cuff', label: 'Schedule re-measure' },
   report: { icon: 'form', label: 'Draft report' },
-  page: { icon: 'cross', label: 'Page crew medic' },
-  track: { icon: 'shield', label: 'Open and track a case' },
+  page: { icon: 'cross', label: 'Page medic' },
+  track: { icon: 'shield', label: 'Track case' },
 };
 export const AGENT_CAPS = MAY;
 const LEVEL = { iss: ['watch', 'forward'], moon: ['watch', 'forward', 'remeasure', 'report'] };
