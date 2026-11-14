@@ -81,8 +81,8 @@ function topBand() {
   const chain = h('div', { class: 'so-dg-chain' }, [
     dgNode('so-dg-rules', 'rule', 'Rules decide', 'status and tier'),
     dgArrow('flow'),
-    dgNode('so-dg-fc', 'flask', 'Forecast warns', 'trend to threshold'),
-    dgArrow('flow'),
+    dgNode('so-dg-fc', 'flask', 'Forecast warns', 'warns, never decides'),
+    dgArrow('flow', true),
     h('div', { class: 'so-dg-end' }, [verdict, aiLink, ai]),
   ]);
   const can = h('ul', { class: 'so-dg-list' }, Object.values(AGENT_CAPS).map((c) =>

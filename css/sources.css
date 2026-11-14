@@ -35,10 +35,12 @@
 .so-dg-dots{display:flex;gap:5px}
 .so-dg-arr{width:22px;height:22px;color:var(--blue);flex:none;align-self:center}
 .so-dg-chain>.so-dg-arr{margin-top:44px;align-self:flex-start}
-.so-dg-arr-down{width:26px;height:26px}
+.so-dg-arr-down,.so-dg-block{width:34px;height:34px}
 .so-dg-link{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:2px 10px;color:var(--muted);font-size:12px;text-align:center;padding:2px 0}
 .so-dg-link>span{flex-basis:100%}
 .so-dg-block{color:var(--muted)}
+.so-dg-block path:last-child{stroke-width:3}
+.so-dg-link{font-size:13px}
 .so-dg-ai{border:1.5px dashed var(--blue);background:rgba(96,165,250,.06);color:var(--muted)}
 .so-dg-ai .so-dg-disc{background:transparent;border:1px dashed var(--blue)}
 .so-dg-agent{border:1px solid var(--line);border-left:3px solid var(--green);border-radius:12px;padding:10px 12px;background:#0b1220;min-width:0}
@@ -62,3 +64,4 @@
 .so-dg-link{justify-content:flex-start;padding-left:40px;gap:6px;text-align:left}
 .so-dg-link>span{flex-basis:auto}
 }
+.so-dg-arr-flow.so-dg-dash{color:var(--yellow)}

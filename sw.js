@@ -1,6 +1,6 @@
 // Offline support: the whole app is cached so it opens again without any network.
 // Bump VERSION on every release so judges never get a stale copy.
-const VERSION = 'crewcheck-v18';
+const VERSION = 'crewcheck-v19';
 const FILES = [
   './',
   './css/app.css',
