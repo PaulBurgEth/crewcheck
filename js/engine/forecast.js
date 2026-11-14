@@ -4,6 +4,7 @@ import { baselineOf, measure } from './evaluate.js';
 const cmp = { gte: (a, b) => a >= b, lte: (a, b) => a <= b, gt: (a, b) => a > b, lt: (a, b) => a < b };
 // Days 1-7 are the adaptation week (expected short sleep, higher pulse): not a trend to extrapolate.
 export const ADAPTATION_DAYS = 7;
+const MIN_T = 3;
 const rising = (op) => op === 'gte' || op === 'gt';
 
 export function forecast(records, day, rule, { lookback = 21, horizon = 30 } = {}) {
@@ -11,7 +12,8 @@ export function forecast(records, day, rule, { lookback = 21, horizon = 30 } = {
   const base = baselineOf(records);
   const points = [];
   for (let d = Math.max(ADAPTATION_DAYS + 1, day - lookback + 1); d <= day; d++) {
-    const v = measure(rule, records, d, base);
+    // Daily values, not the rule's rolling mean: overlapping means make noise look like a trend.
+    const v = measure({ ...rule, window: 1 }, records, d, base);
     if (v !== null) points.push({ day: d, value: v });
   }
   // Two weeks of data at least: a one-week fit swings too much to extrapolate 30 days.
@@ -32,11 +34,14 @@ export function forecast(records, day, rule, { lookback = 21, horizon = 30 } = {
     const w = 1.64 * sd * Math.sqrt(1 + k / lookback);
     cone.push({ day: day + k, mid, lo: mid - w, hi: mid + w });
   }
-  const last = points[points.length - 1];
-  const alreadyFiring = last.day === day && cmp[rule.op](last.value, rule.value);
+  const now = measure(rule, records, day, base);
+  const alreadyFiring = now !== null && cmp[rule.op](now, rule.value);
   const up = rising(rule.op);
   let crossDay = null;
-  if (!alreadyFiring && (up ? slope > 0 : slope < 0)) {
+  // Warn only on a real trend: the slope must stand clear of day-to-day noise (t-statistic).
+  const tStat = !sxx ? 0 : sd ? slope / (sd / Math.sqrt(sxx)) : slope ? Infinity : 0;
+  const trend = Math.abs(tStat) >= MIN_T;
+  if (!alreadyFiring && trend && (up ? slope > 0 : slope < 0)) {
     const hit = cone.find((c) => cmp[rule.op](c.mid, rule.value));
     if (hit) crossDay = hit.day;
   }

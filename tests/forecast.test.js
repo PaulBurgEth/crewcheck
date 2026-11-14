@@ -36,3 +36,7 @@ test('adaptation week is not extrapolated: no forecast on day 10', () => {
   assert.equal(forecast(maya.records, 20, rule('sbp-y')), null);
   assert.ok(forecast(maya.records, 21, rule('sbp-y')));
 });
+test('noise is not a trend: Ilya day 40 sleep shows no crossing', () => {
+  const ilya = generateCrew().find((c) => c.id === 'ilya');
+  assert.ok(!nextCrossings(ilya.records, 40).some((x) => x.rule.id === 'sleep-y'));
+});
