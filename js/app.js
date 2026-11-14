@@ -60,3 +60,7 @@ const LATER = ['crew', 'checkin', 'trends', 'earth', 'sources'];
 for (const id of LATER) {
   import(`./screens/${id}.js`).then((mod) => { registerScreen(id, mod.default); if (state.route === id) render(); }).catch(() => {});
 }
+
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
