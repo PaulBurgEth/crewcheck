@@ -1,6 +1,6 @@
 // Live advisor through the CrewCheck proxy. Off until a proxy URL is configured; the demo never depends on it.
 // Any failure is silent: precomputed advice stays on screen.
-export const PROXY_URL = '';
+export const PROXY_URL = 'https://crewcheck-api.paulburg.com/advice';
 const cache = new Map();
 const pending = new Set();
 
