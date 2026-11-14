@@ -28,6 +28,7 @@ function enter(i) {
   clearTimers();
   st.i = i;
   const s = currentStep();
+  history.replaceState(null, '', `#/story?step=${i + 1}`);
   const base = { personId: HERO_ID, system: null, liveAlert: null, advisorOpen: !!s.advisor };
   if (s.id === 'try') { set({ ...base, advisorOpen: false }); onChange(); return; }
   if (s.missions) {
@@ -36,7 +37,8 @@ function enter(i) {
   } else if (s.from) {
     set({ ...base, day: s.from, missionId: s.mission });
     const n = s.day - s.from;
-    const stepMs = Math.max(120, Math.min(300, 3600 / n));
+    // Quick sweep (about 2 s) that always lands on the step's day.
+    const stepMs = Math.max(60, Math.min(160, 2000 / n));
     for (let k = 1; k <= n; k++) later(() => set({ day: s.from + k }), stepMs * k);
   } else {
     set({ ...base, day: s.day, missionId: s.mission });
@@ -46,7 +48,7 @@ function enter(i) {
 }
 
 export function startStory({ play = false, step = 0 } = {}) { st.on = true; st.playing = play; enter(Math.max(0, Math.min(STEPS.length, step))); }
-export function stopStory() { clearTimers(); st.on = false; st.playing = false; set({ advisorOpen: false }); onChange(); }
+export function stopStory() { clearTimers(); st.on = false; st.playing = false; history.replaceState(null, '', '#/explore'); set({ advisorOpen: false }); onChange(); }
 const go = (d) => { st.playing = false; enter(Math.max(0, Math.min(STEPS.length, st.i + d))); };
 function togglePlay() {
   st.playing = !st.playing;

@@ -123,7 +123,7 @@ export function renderToday(root, hooks = {}) {
   const deep = missionById('mars-transit');
   const sysDots = SYSTEMS.map((s) => ({ label: s.label, status: ev.systems[s.id].status }));
   shell.sceneApi.update({
-    missions: MISSIONS, mission: m, v, compare, replay: story.on ? currentStep().id : '',
+    missions: MISSIONS, mission: m, v, compare, replay: story.on ? currentStep().id : '', selfName: p.name.split(' ')[0],
     compareRows: [
       { title: 'Near Earth', mission: near, tier: escalate(ev, near).tier, signals: sysDots },
       { title: 'Deep space', mission: deep, tier: escalate(ev, deep, { followupFailed: fu?.state === 'not-worked' }).tier, signals: sysDots },
@@ -154,7 +154,7 @@ export function renderToday(root, hooks = {}) {
 
   // 2 DECIDE: decided by rules, Why panel, one forecast chip.
   const vbox = h('div', { class: 'vd-box' });
-  renderVerdict(vbox, { ev, v, records, mission: m, onRule: (sys) => set({ system: sys }) });
+  renderVerdict(vbox, { ev, v, records, mission: m, selfName: p.name.split(' ')[0], onRule: (sys) => set({ system: sys }) });
   const decideKids = [h('div', { class: 'col-h' }, [h('span', { class: 'col-n', text: '2' }), h('span', { text: 'Decide' })]), vbox];
   if (state.day <= ADAPTATION_DAYS && v.status === 'yellow') decideKids.push(h('div', { class: 'verdict-ctx', title: 'Short sleep and headaches are expected while the body adapts to microgravity', text: 'Adaptation week · expected' }));
   if (state.system) {
@@ -178,7 +178,11 @@ export function renderToday(root, hooks = {}) {
     const [ic, words] = ACTION_ICON[key] || ['cross', /surgeon/i.test(a.text) ? 'Ask surgeon' : 'Medic review'];
     return h('div', { class: `act-card ac-${a.confidence}`, title: a.text }, [h('span', { class: 'act-ic' }, [icon(ic)]), h('span', { class: 'act-w', text: words }), confBadge(a.confidence)]);
   });
-  actKids.push(h('div', { class: 'act-cards', 'data-spot': 'act' }, cards.length ? cards : [h('div', { class: 'act-none' }, [icon('check'), h('span', { text: 'Keep the routine' })])]));
+  // On the Act step of the story the badge meanings are spelled out once.
+  const badgeKey = story.on && currentStep().id === 'act' && cards.length
+    ? h('div', { class: 'act-key' }, [confBadge('established'), h('span', { text: 'NASA or clinical source' }), confBadge('hypothesis'), h('span', { text: 'confirm with a repeat check' }), confBadge('ask'), h('span', { text: 'a person decides' })])
+    : null;
+  actKids.push(h('div', { class: 'act-cards', 'data-spot': 'act' }, cards.length ? [...cards, badgeKey] : [h('div', { class: 'act-none' }, [icon('check'), h('span', { text: 'Keep the routine' })])]));
   actKids.push(advisorBubble(p, ev, v, m, records));
   if (fu && fu.state !== 'none' && state.day <= fu.dueDay + 14) actKids.push(followUpCard(fu, records));
   shell.act.replaceChildren(...actKids);
@@ -235,7 +239,8 @@ function advisorBubble(p, ev, v, m, records) {
   }
   const say = shown.advice.text.split(/(?<=\.)\s+/).slice(0, 2).join(' ');
   const answer = advQ ? (getLiveAdvice(p.id, state.day, advQ)?.text || adv?.answers?.[advQ]) : null;
-  box.append(
+  // Element.append() would print null as text, so empty parts are filtered out.
+  box.append(...[
     h('div', { class: 'adv-say', text: say }),
     adv?.answers || PROXY_URL ? h('div', { class: 'adv-qs' }, QUESTIONS.map((q) => h('button', {
       type: 'button', class: `adv-q${advQ === q.id ? ' on' : ''}`, 'aria-pressed': String(advQ === q.id),
@@ -243,7 +248,7 @@ function advisorBubble(p, ev, v, m, records) {
     }))) : null,
     answer ? h('div', { class: 'adv-ans', text: answer }) : null,
     h('div', { class: 'adv-origin', text: live ? 'AI-generated (Claude), live' : PRECOMPUTED_LABEL }),
-  );
+  ].filter(Boolean));
   return box;
 }
 
