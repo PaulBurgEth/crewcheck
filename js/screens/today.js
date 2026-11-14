@@ -6,6 +6,9 @@ import { renderBody } from '../viz/body.js';
 import { renderNodes } from '../viz/nodes.js';
 import { renderSignal } from '../viz/signal.js';
 import { renderTimeline } from '../viz/timeline.js';
+import { renderWhy } from './why.js';
+import { nextCrossings } from '../engine/forecast.js';
+import { SIGNAL_LABEL } from '../data/explain.js';
 
 let hintsSeen = false;
 let tlCache = null;
@@ -43,7 +46,12 @@ export function renderToday(root, hooks = {}) {
   const actions = h('ul', { class: 'actions' }, v.actions.map((a) => h('li', {}, [confBadge(a.confidence), h('span', { text: a.text })])));
   const extra = h('div', { class: 'today-extra' });
 
-  side.append(verdict, switcher, nodesBox, signalBox, actions, extra);
+  const ahead = nextCrossings(verdictFor().records, state.day).slice(0, 2);
+  const forecastRow = ahead.length ? h('div', { class: 'ahead' }, ahead.map((c) => h('button', {
+    class: 'ahead-chip', title: 'Forecast: linear trend of the last 21 days', onclick: () => hooks.go?.('trends'),
+  }, [confBadge('hypothesis'), h('span', { text: `${SIGNAL_LABEL[c.rule.signal][0]} → ${c.rule.value} in ~${c.daysToCross} d` })]))) : null;
+
+  side.append(verdict, forecastRow, switcher, nodesBox, signalBox, actions, extra);
   root.append(head, h('div', { class: 'today-grid' }, [bodyBox, side]), tl);
 
   if (!hintsSeen) {
@@ -69,5 +77,10 @@ export function renderToday(root, hooks = {}) {
     });
   }
   tlCache = { personId: p.id, node: tl, day: state.day };
+  if (state.system) {
+    const whyBox = h('div', { class: 'why-box' });
+    verdict.after(whyBox);
+    renderWhy(whyBox, { systemId: state.system, ev, onClose: () => set({ system: null }) });
+  }
   hooks.after?.({ root, side, extra, bodyBox, ev, v, p, m });
 }

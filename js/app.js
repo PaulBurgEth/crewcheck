@@ -52,6 +52,7 @@ document.querySelector('.foot').append(' · ', h('button', { class: 'link', text
 
 Object.assign(state, readHash());
 subscribe(render);
+window.addEventListener('hashchange', () => { const p = readHash(); if (p.personId && p.personId !== state.personId) resetTimeline(); set({ system: null, ...p }); });
 render();
 
 // Screens added in later steps register themselves.
