@@ -124,3 +124,9 @@ button.link{background:none;border:0;color:var(--muted);text-decoration:underlin
 a.src{text-decoration:none}a.src:hover{text-decoration:underline}
 .ci,.tr,.so,.ea{width:100%}
 @media (max-width:760px){.top{position:static}}
+.boot-fail{text-align:center;padding:48px 16px;color:var(--text)}
+.boot-fail button{margin-top:12px;font:inherit;font-weight:700;padding:10px 22px;border-radius:999px;border:0;background:var(--blue);color:#06101f;cursor:pointer}
+/* Phone: verdict first, then body, then who acts, then the suit card. */
+@media (max-width:760px){.today-grid{gap:14px}.today-left,.today-side{display:contents}.today-side>*{order:3}.today-side>.verdict{order:1}.today-body{order:2}.suit-box{order:4}.fu{order:5}}
+.verdict-ctx{display:inline-block;margin-top:6px;font-size:13px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 10px}
+.suit-sim{color:var(--blue);border-color:rgba(96,165,250,.4)}

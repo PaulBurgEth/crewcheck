@@ -70,7 +70,7 @@
 .cc-tl-day{font-size:16px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
 .cc-tl-num{font-size:44px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
 .cc-tl-track{padding:0 15px}
-.cc-tl-inner{position:relative;margin-top:30px}
+.cc-tl-inner{position:relative;margin-top:48px}
 .cc-tl-strip{display:block;width:100%;height:14px;border-radius:7px;overflow:hidden}
 .cc-tl-play{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1.5px;border-radius:2px;background:var(--text);box-shadow:0 0 8px var(--text);pointer-events:none}
 .cc-tl-evs{position:absolute;left:0;right:0;top:0;height:0}

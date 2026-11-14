@@ -30,3 +30,9 @@ test('maya day 108 has a coming crossing', () => {
   assert.ok(hit, JSON.stringify(list.map((x) => [x.rule.id, x.daysToCross])));
   assert.ok(hit.daysToCross >= 1 && hit.daysToCross <= 30);
 });
+test('adaptation week is not extrapolated: no forecast on day 10', () => {
+  const maya = generateCrew().find((c) => c.id === 'maya');
+  assert.equal(forecast(maya.records, 10, rule('hr-low-y') || RULES.find((r) => r.signal === 'hr' && r.op === 'lt' || r.signal === 'hr' && r.op === 'lte')), null);
+  assert.equal(forecast(maya.records, 20, rule('sbp-y')), null);
+  assert.ok(forecast(maya.records, 21, rule('sbp-y')));
+});

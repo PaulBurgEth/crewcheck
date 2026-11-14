@@ -44,7 +44,7 @@ function infoToggle(f) {
 export default function render(root, { go } = {}) {
   const { personId, day } = state;
   const rec = recordsOf(personId).find((r) => r.day === day) || {};
-  const src = { ...rec, ...(localEntry(personId, day) || {}) };
+  const src = localEntry(personId, day) || rec;
   const form = {
     mood: src.mood ?? '', vision: src.vision ?? '', headache: src.headache ?? '',
     glucose: src.glucose ?? '', mass: src.mass ?? '', sbp: '', dbp: '',
@@ -100,6 +100,7 @@ export default function render(root, { go } = {}) {
       return;
     }
     savedKey = `${personId}:${day}`;
+    for (const k of ['glucose', 'mass']) if (String(form[k]).trim() === '') r.entry[k] = null;
     saveEntry(personId, day, r.entry);
   };
 

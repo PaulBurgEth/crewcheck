@@ -21,13 +21,13 @@ export function renderWhy(container, { systemId, ev, onClose }) {
   const readings = h('div', { class: 'why-readings' }, sys.signals.map((s) => {
     const sig = ev.signals[s] || {};
     const [label, unit] = SIGNAL_LABEL[s];
-    return h('div', { class: `why-read r-${sig.status || 'grey'}` }, [h('span', { class: 'rv', text: fmt(sig.value) }), h('span', { class: 'ru', text: unit }), h('span', { class: 'rl', text: label })]);
+    return h('div', { class: `why-read r-${sig.status || 'grey'}` }, [h('span', { class: 'rv', text: fmt(sig.value) }), h('span', { class: 'ru', text: unit }), h('span', { class: 'rl', text: `${label} · today` })]);
   }));
 
   const fired = st.fired.length
     ? st.fired.map((f) => h('div', { class: 'why-rule' }, [
       h('span', { class: `dot d-${f.level}` }),
-      h('span', { text: `${f.title} · now ${fmt(f.measured)}` }),
+      h('span', { text: `${f.title} · ${f.kind === 'delta' ? `+${fmt(f.measured)} vs norm` : f.kind === 'pct' ? `${fmt(f.measured)}% vs norm` : f.window > 1 ? `mean ${fmt(f.measured)}` : `now ${fmt(f.measured)}`}` }),
       srcTag(f.source),
     ]))
     : [h('span', { class: 'muted', text: 'No rule fired' })];
