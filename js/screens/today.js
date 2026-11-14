@@ -21,7 +21,7 @@ import { evaluate } from '../engine/evaluate.js';
 import { escalate } from '../engine/escalation.js';
 import { getLiveAdvice, requestLiveAdvice, PROXY_URL, livePayload } from './advisor-live.js';
 import { story, renderStoryBar, decorate, currentStep } from './story.js';
-import { renderCase, renderAgentLog } from './case-card.js';
+import { renderCase, renderAgentLog, noteIsOpen } from './case-card.js';
 
 const flagged = (ev) => Object.entries(ev.systems).filter(([, s]) => s.status === 'yellow' || s.status === 'red').map(([k]) => k).sort().join(',');
 const EVENT_ICON = { adaptation: 'moon', 'missed-workouts': 'run', 'slow-drift': 'moon', 'treadmill-maintenance': 'run', 'on-call': 'clock', countermeasure: 'shield', spe: 'rad' };
@@ -44,6 +44,7 @@ let drawer = false;
 let lastSystem = null;
 let lastStep = null;
 let playTimer = 0;
+let liveTimer = 0;
 export const resetTimeline = () => { shell = null; };
 
 function buildShell(p) {
@@ -218,11 +219,20 @@ export function renderToday(root, hooks = {}) {
   }, 30);
   lastStep = step;
 
+  // Live advice only on demand (bubble open, a question chosen, the note open) and only once the day
+  // has stayed put for a moment, so dragging the slider or the story sweep never floods the proxy.
+  clearTimeout(liveTimer);
   if (PROXY_URL && v.status !== 'green') {
-    const payload = livePayload(ev, v, m, records, fu);
-    if (!getLiveAdvice(p.id, state.day)) requestLiveAdvice(p.id, state.day, payload, () => set({}));
-    if (advQ && !getLiveAdvice(p.id, state.day, advQ)) requestLiveAdvice(p.id, state.day, payload, () => set({}), advQ);
-    if (!getLiveAdvice(p.id, state.day, 'handover')) requestLiveAdvice(p.id, state.day, payload, () => set({}), 'handover');
+    const wanted = [state.advisorOpen && 'explain', state.advisorOpen && advQ, noteIsOpen() && 'handover'].filter(Boolean)
+      .filter((q) => !getLiveAdvice(p.id, state.day, q));
+    if (wanted.length) {
+      const day = state.day;
+      liveTimer = setTimeout(() => {
+        if (state.day !== day || state.personId !== p.id) return;
+        const payload = livePayload(ev, v, m, records, fu);
+        for (const q of wanted) requestLiveAdvice(p.id, day, payload, () => set({}), q);
+      }, 700);
+    }
   }
 }
 renderToday.persistent = true;

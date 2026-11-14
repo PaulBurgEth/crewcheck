@@ -65,9 +65,9 @@ export function parseModelOutput(raw) {
   if (m) s = m[1];
   let o;
   try { o = JSON.parse(s); } catch { return null; }
-  if (!isObj(o) || typeof o.text !== 'string' || o.text.length > 400) return null;
+  if (!isObj(o) || typeof o.text !== 'string' || o.text.length > 700) return null;
   if (!Array.isArray(o.points) || o.points.length > 3) return null;
-  if (!o.points.every((p) => typeof p === 'string' && p.length <= 140)) return null;
+  if (!o.points.every((p) => typeof p === 'string' && p.length <= 200)) return null;
   return { text: o.text, points: o.points };
 }
 
