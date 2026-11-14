@@ -143,8 +143,12 @@ function draw(canvas, records, day, sig, base, info, colors) {
     if (t.y > lo - span0 * 1.5 && t.y < hi + span0 * 1.5) { lo = Math.min(lo, t.y); hi = Math.max(hi, t.y); }
   }
   const pad = (hi - lo || 1) * 0.08;
-  const step = (hi - lo) > 40 ? 10 : (hi - lo) > 8 ? 2 : 0.5;
+  // Ticks on a 1-2-5 grid with bounds on the same grid, so the min and max labels never crowd an inner tick.
+  const raw = ((hi - lo) + 2 * pad) / 5;
+  const mag = 10 ** Math.floor(Math.log10(raw || 1));
+  const step = [1, 2, 5, 10].map((k) => k * mag).find((x) => x >= raw) || 10 * mag;
   const yMin = Math.floor((lo - pad) / step) * step, yMax = Math.ceil((hi + pad) / step) * step;
+  info.yStep = step;
 
   const overlay = {
     id: 'trOverlay',
@@ -210,7 +214,7 @@ function draw(canvas, records, day, sig, base, info, colors) {
       interaction: { mode: 'nearest', axis: 'x', intersect: false },
       scales: {
         x: { type: 'linear', min: d0, max: d1, ticks: { color: colors.muted, maxTicksLimit: 8, precision: 0 }, grid: { color: alpha(colors.line, 0.5) }, border: { color: colors.line } },
-        y: { min: yMin, max: yMax, ticks: { color: colors.muted, maxTicksLimit: 6, callback: (v) => fmt(v) }, grid: { color: alpha(colors.line, 0.5) }, border: { color: colors.line } },
+        y: { min: yMin, max: yMax, ticks: { color: colors.muted, stepSize: info.yStep, callback: (v) => fmt(v) }, grid: { color: alpha(colors.line, 0.5) }, border: { color: colors.line } },
       },
       plugins: {
         legend: { display: false },

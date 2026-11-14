@@ -80,7 +80,7 @@ export function renderToday(root, hooks = {}) {
     h('div', { class: 'where', text: `Day ${state.day} · ${m.label}` }),
     h('div', { class: 'rings-wrap' }, [ringsBox, h('div', { class: 'rings-legend' }, [
       h('span', { class: 'rl rl-suit', text: 'Suit' }), h('span', { class: 'rl rl-check', text: 'Check-in' }),
-      h('span', { class: 'rl rl-ex', text: 'Exercise' }), h('span', { class: 'rl-streak', text: `${streak}-day check-in streak` }),
+      h('span', { class: 'rl rl-ex', text: 'Exercise' }), h('span', { class: 'rl-streak', text: streak < state.day ? `${streak}-day check-in streak · missed day ${state.day - streak}` : `${streak}-day check-in streak` }),
     ])]),
   );
   renderRings(ringsBox, {
