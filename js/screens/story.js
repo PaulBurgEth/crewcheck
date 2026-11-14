@@ -55,10 +55,11 @@ function togglePlay() {
 }
 
 // Bar on top of the monitor: steps, one caption, Back / Next, Play, Explore freely.
-export function renderStoryBar(container) {
+export function renderStoryBar(container, { who = '' } = {}) {
   const s = currentStep();
   const last = s.id === 'try';
   container.replaceChildren(
+    h('div', { class: 'sb-who' }, who),
     h('ol', { class: 'sb-steps', 'aria-label': 'Story steps' }, STEPS.map((x, k) => h('li', {}, [h('button', {
       type: 'button', class: `sb-step${k === st.i ? ' on' : ''}${k < st.i ? ' done' : ''}`, 'aria-current': k === st.i ? 'step' : null,
       onclick: () => { st.playing = false; enter(k); },

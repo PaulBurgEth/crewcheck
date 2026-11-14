@@ -96,7 +96,7 @@ export function renderToday(root, hooks = {}) {
   const today = records[state.day - 1] || {};
 
   shell.bar.hidden = !story.on;
-  if (story.on) renderStoryBar(shell.bar);
+  if (story.on) renderStoryBar(shell.bar, { who: `${p.name} · Day ${state.day}` });
 
   shell.head.replaceChildren(
     h('div', { class: 'who', title: p.role }, [h('span', { class: 'who-name', text: p.name })]),
@@ -149,7 +149,8 @@ export function renderToday(root, hooks = {}) {
     ]),
     src ? h('div', { class: 'src-detail' }, [h('b', { text: src.name }), h('span', { text: ` · ${src.status(state.day, localEntry(p.id, state.day) || today)}` })]) : null,
   ]);
-  shell.sense.replaceChildren(h('div', { class: 'col-h' }, [h('span', { class: 'col-n', text: '1' }), h('span', { text: 'Sense' })]), bodyBox, shell.suit, sources);
+  // Live suit lines stand right of the body, so both show on the first screen.
+  shell.sense.replaceChildren(h('div', { class: 'col-h' }, [h('span', { class: 'col-n', text: '1' }), h('span', { text: 'Sense' })]), h('div', { class: 'sense-row' }, [bodyBox, shell.suit]), sources);
 
   // 2 DECIDE: decided by rules, Why panel, one forecast chip.
   const vbox = h('div', { class: 'vd-box' });
@@ -197,11 +198,16 @@ export function renderToday(root, hooks = {}) {
   const step = story.on ? currentStep().id : null;
   // New story step: bring its first highlighted block into view (keep the story bar visible).
   if (step && step !== lastStep) setTimeout(() => {
-    const el = shell.root.querySelector('.spot');
-    if (!el) return;
-    const r = el.getBoundingClientRect();
+    const spots = [...shell.root.querySelectorAll('.spot')];
+    if (!spots.length) return;
+    const top = Math.min(...spots.map((e) => e.getBoundingClientRect().top));
+    const bottom = Math.max(...spots.map((e) => e.getBoundingClientRect().bottom));
     const cover = (shell.bar.getBoundingClientRect().bottom || 0) + 12;
-    if (r.top < cover || r.bottom > innerHeight) window.scrollTo({ top: Math.max(0, scrollY + r.top - cover), behavior: 'smooth' });
+    // Smallest scroll that shows all highlighted blocks; if they do not fit, align their top under the bar.
+    let dy = 0;
+    if (bottom > innerHeight) dy = Math.min(bottom - innerHeight + 16, top - cover);
+    else if (top < cover) dy = top - cover;
+    if (Math.abs(dy) > 4) window.scrollTo({ top: Math.max(0, scrollY + dy), behavior: 'smooth' });
   }, 30);
   lastStep = step;
 
