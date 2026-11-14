@@ -76,7 +76,13 @@ export function createScene(container, { onMission, onCompare } = {}) {
 
   function update({ missions, mission: m, v, compare = false, compareRows = [], replay = '', selfName = '', may = [] }) {
     // What the onboard agent may do on its own grows with distance (design assumption).
-    mayRow.replaceChildren(h('span', { class: 'scn-may-k' }, 'Agent may'), ...may.map((x) => h('span', { class: `scn-may-i${x.on ? ' on' : ''}`, title: `${x.label}${x.on ? '' : ' (not here)'}`, 'aria-label': `${x.label}: ${x.on ? 'yes' : 'no'}` }, [icon(x.icon)])), h('span', { class: 'scn-tag' }, 'design assumption'));
+    // Hover or tap an icon to read its two-word name in the row.
+    const say = h('span', { class: 'scn-may-say', 'aria-live': 'polite' });
+    const show = (x) => { say.textContent = x ? `${x.label}${x.on ? '' : ' · not here'}` : ''; };
+    mayRow.replaceChildren(h('span', { class: 'scn-may-k' }, 'Agent may'), ...may.map((x) => h('button', {
+      type: 'button', class: `scn-may-i${x.on ? ' on' : ''}`, title: `${x.label}${x.on ? '' : ' (not here)'}`, 'aria-label': `${x.label}: ${x.on ? 'yes' : 'no'}`,
+      onmouseenter: () => show(x), onmouseleave: () => show(null), onfocus: () => show(x), onblur: () => show(null), onclick: () => show(x),
+    }, [icon(x.icon)])), say, h('span', { class: 'scn-tag' }, 'design assumption'));
     if (selfName) nodes.self.querySelector('.scn-name').textContent = selfName;
     sw.replaceChildren(...missions.map((mi) => h('button', {
       type: 'button', class: `scn-ms${mi.id === m.id ? ' on' : ''}`, role: 'radio', 'aria-checked': String(mi.id === m.id),

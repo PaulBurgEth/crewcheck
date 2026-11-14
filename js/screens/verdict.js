@@ -60,7 +60,8 @@ export function renderVerdict(container, { ev, v, records, mission, onRule, self
   const head = h('div', { class: 'vd-head' }, [icon('rule'), h('span', {}, 'Decided by rules')]);
   const line = h('div', { class: 'vd-line' }, [
     ev.liveAlert ? h('span', { class: `vd-live lc-${ev.liveAlert.level}` }, [icon('suit'), h('span', {}, `Suit · ${SIGNAL_LABEL[ev.liveAlert.signal][0]} ${ev.liveAlert.measured}`)]) : null,
-    h('span', { class: 'vd-headline' }, v.headline),
+    // Who acts is already in WHO and the distance scene; the headline names what happened.
+    h('span', { class: 'vd-headline' }, /^Linked signals/.test(v.headline) && v.combos?.length ? `${v.combos[0].systems.length} linked signals` : v.headline),
   ]);
   const box = h('section', { class: `vd v-${v.status}`, 'data-spot': 'rules' }, [head, line]);
 

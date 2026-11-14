@@ -26,7 +26,7 @@ export function renderSuit(container, { record, seed = 1, onAlert } = {}) {
   container.replaceChildren(
     h('div', { class: 'suit-head' }, [
       h('span', { class: 'suit-title', text: 'Suit live' }),
-      h('span', { class: 'suit-status' }, [h('span', { class: 'suit-dot' }), 'Streaming · modelled on CSA Bio-Monitor']),
+      h('span', { class: 'suit-status' }, [h('span', { class: 'suit-dot' }), 'Live · CSA Bio-Monitor model']),
     ]),
     banner,
     h('div', { class: 'suit-lines' }, [live.hr, live.rr, live.spo2]),
