@@ -10,6 +10,7 @@ const STAGE_WORD = { watch: 'Watch', flag: 'Flag', plan: 'Plan', act: 'Act', ver
 const cache = new WeakMap();
 const approved = new Map(); // `${person}:${caseId}:${actionId}` -> day approved (memory only, like check-ins)
 let noteOpen = false;
+export const noteIsOpen = () => noteOpen;
 
 export const casesFor = (records, strip) => {
   if (!cache.has(strip)) cache.set(strip, casesOf(records));

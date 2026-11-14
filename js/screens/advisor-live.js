@@ -53,8 +53,8 @@ export async function requestLiveAdvice(personId, day, payload, onDone, question
     if (!res.ok) return;
     const d = await res.json();
     if (typeof d?.text !== 'string' || !Array.isArray(d.points)) return;
-    const points = d.points.filter((p) => typeof p === 'string').slice(0, 3).map((p) => p.slice(0, 140));
-    cache.set(key, { text: d.text.slice(0, 400), points, origin: 'live' });
+    const points = d.points.filter((p) => typeof p === 'string').slice(0, 3).map((p) => p.slice(0, 200));
+    cache.set(key, { text: d.text.slice(0, 700), points, origin: 'live' });
     if (typeof onDone === 'function') onDone();
   } catch {
     // silent by design
