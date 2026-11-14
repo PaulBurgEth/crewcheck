@@ -31,8 +31,8 @@ const section = (title, body, open = false) =>
 // Onboard agent: what it may do at each distance, and what it never does (design assumption).
 function agentSection() {
   const yes = (on) => h('span', { class: on ? 'ag-yes' : 'ag-no', text: on ? '✓' : '–' });
-  const head = ['Action', ...['iss', 'moon', 'mars-transit'].map((id) => MISSIONS.find((m) => m.id === id).label)];
-  const rows = Object.entries(AGENT_CAPS).map(([id, c]) => [c.label, ...['iss', 'moon', 'mars-transit'].map((mid) => yes(agentMay(MISSIONS.find((m) => m.id === mid)).includes(id)))]);
+  const head = ['Action', ...MISSIONS.map((m) => m.label)];
+  const rows = Object.entries(AGENT_CAPS).map(([id, c]) => [c.label, ...MISSIONS.map((m) => yes(agentMay(m).includes(id)))]);
   return [
     table(head, rows),
     h('div', { class: 'ag-never' }, [h('b', { text: 'Never, at any distance: ' }), h('span', { text: AGENT_NEVER.join(' · ') })]),

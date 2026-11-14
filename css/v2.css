@@ -359,3 +359,4 @@ canvas.tr-draw{animation:trdraw 1.6s cubic-bezier(.4,0,.2,1) both}
 button.scn-may-i{background:none;padding:0;color:inherit;cursor:help}
 .scn-may-say{font-size:12px;color:var(--text);font-weight:600;min-width:0}
 .scn-may-say:empty{display:none}
+@media (max-width:760px){.today.v2 .cs{order:6}}

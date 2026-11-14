@@ -18,6 +18,7 @@ export function livePayload(ev, v, mission, records, fu = null) {
     fired: ev.fired.slice(0, 12).map((f) => ({
       rule: f.id, signal: f.signal, measured: f.measured, threshold: f.value,
       kind: f.kind, norm: r1(ev.baseline?.[f.signal]), days: daysFiring(f.id), unit: SIGNAL_LABEL[f.signal]?.[1] || '',
+      since: ev.day - daysFiring(f.id) + 1,
     })),
   };
   if (v.combos?.length) out.linked = v.combos[0].systems;
@@ -30,6 +31,13 @@ export function livePayload(ev, v, mission, records, fu = null) {
 export const PROXY_URL = 'https://crewcheck-api.paulburg.com/advice';
 const cache = new Map();
 const pending = new Set();
+// Stay under the proxy limit (6 a minute per address): at most 5 a minute, and nothing for a minute after a 429.
+const MAX_PER_MIN = 5;
+let sent = [];
+let coolUntil = 0;
+export const liveBlocked = () => Date.now() < coolUntil || sent.filter((t) => Date.now() - t < 60000).length >= MAX_PER_MIN;
+
+export const liveTried = (personId, day, question) => pending.has(`${personId}:${day}:${question}`);
 
 export function getLiveAdvice(personId, day, question = 'explain') {
   return cache.get(`${personId}:${day}:${question}`) || null;
@@ -39,8 +47,9 @@ export async function requestLiveAdvice(personId, day, payload, onDone, question
   const key = `${personId}:${day}:${question}`;
   if (!PROXY_URL || (typeof navigator !== 'undefined' && navigator.onLine === false)) return;
   // One attempt per person, day and question: a failure is not retried on every render.
-  if (pending.has(key) || cache.has(key)) return;
+  if (pending.has(key) || cache.has(key) || liveBlocked()) return;
   pending.add(key);
+  sent = [...sent.filter((t) => Date.now() - t < 60000), Date.now()];
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), 6000);
   try {
@@ -50,6 +59,7 @@ export async function requestLiveAdvice(personId, day, payload, onDone, question
       body: JSON.stringify(question === 'explain' ? payload : { ...payload, question }),
       signal: ctl.signal,
     });
+    if (res.status === 429) { coolUntil = Date.now() + 60000; pending.delete(key); return; }
     if (!res.ok) return;
     const d = await res.json();
     if (typeof d?.text !== 'string' || !Array.isArray(d.points)) return;
