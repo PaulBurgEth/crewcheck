@@ -16,15 +16,24 @@ export function buildDownlink(personId, day, missionId, verdictFor, { period = 1
     for (const [id, s] of Object.entries(ev.systems)) {
       if (flagged(s.status)) summary.systemsFlagged[id] = (summary.systemsFlagged[id] || 0) + 1;
     }
-    const prev = d > 1 ? verdictFor(personId, d - 1, missionId).v.status : 'green';
-    const episodeStart = flagged(status) && !flagged(prev);
-    if (v.reply.sent) summary.sent++;
-    if (v.reply.sent || v.tier === 'earth' || episodeStart) {
+    const pv = d > 1 ? verdictFor(personId, d - 1, missionId) : null;
+    const prevStatus = pv ? pv.v.status : 'green';
+    const fired = [...new Set(ev.fired.map((f) => f.id))];
+    const sysKey = (e) => Object.entries(e.systems).filter(([, x]) => flagged(x.status)).map(([k]) => k).join();
+    const prevSys = pv ? sysKey(pv.ev) : '';
+    const notify = v.reply.sent || v.tier === 'earth';
+    // A message goes to Earth only when something changes; unchanged days fold into the last message.
+    const changed = (flagged(status) && !flagged(prevStatus)) || !pv || pv.v.tier !== v.tier || prevSys !== sysKey(ev);
+    const last = entries[entries.length - 1];
+    if ((notify || flagged(status)) && (changed || !last)) {
+      if (notify) summary.sent++;
       entries.push({
-        day: d, status, tier: v.tier, headline: v.headline,
-        fired: [...new Set(ev.fired.map((f) => f.id))],
+        day: d, lastDay: d, repeats: 0, status, tier: v.tier, headline: v.headline, fired,
         sentAtMin: SENT_AT_MIN, arrivesAtMin: SENT_AT_MIN + oneWayMin, replyAtMin: SENT_AT_MIN + 2 * oneWayMin,
       });
+    } else if (last && (notify || flagged(status))) {
+      last.lastDay = d;
+      last.repeats++;
     }
   }
   return { personId, missionId, from, to: day, oneWayMin, entries, summary };

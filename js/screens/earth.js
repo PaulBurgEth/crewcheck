@@ -31,7 +31,7 @@ function timeline(e) {
 function entryRow(e) {
   const chips = e.fired.map((id) => h('span', { class: 'ea-chip', text: id }));
   return h('li', { class: 'ea-row' }, [
-    h('div', { class: 'ea-day', text: `D${e.day}` }),
+    h('div', { class: 'ea-day', text: e.lastDay > e.day ? `D${e.day}–${e.lastDay}` : `D${e.day}`, title: e.repeats ? `+${e.repeats} daily status updates` : null }),
     h('span', { class: `ea-dot ea-${e.status}`, 'aria-label': e.status }),
     h('div', { class: 'ea-main' }, [
       h('div', { class: 'ea-head', text: e.headline }),

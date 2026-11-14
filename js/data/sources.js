@@ -17,13 +17,14 @@ export const SOURCES = {
   'nasa-std-3001': { kind: 'nasa', short: 'NASA-STD-3001 Vol. 1', title: 'NASA-STD-3001 Volume 1 Rev C, Crew Health', url: 'https://www.nasa.gov/wp-content/uploads/2023/11/nasa-std-3001-vol-1-rev-c-with-signature.pdf' },
   'csa-biomonitor': { kind: 'agency', short: 'CSA Bio-Monitor', title: 'Canadian Space Agency: Bio-Monitor', url: 'https://www.asc-csa.gc.ca/eng/sciences/bio-monitor.asp' },
   'csa-radiation': { kind: 'agency', short: 'CSA, Monitoring Radiation', title: 'Canadian Space Agency: Monitoring Radiation for Astronaut Health', url: 'https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp' },
-  'swri-rad': { kind: 'agency', short: 'MSL RAD estimate (SwRI)', title: 'SwRI: radiation exposure associated with a trip to Mars (MSL RAD)', url: 'https://www.swri.org/press-release/swri-led-team-calculates-radiation-exposure-associated-trip-mars' },
-  'aha-bp': { kind: 'clinical', short: 'Clinical norm (AHA)', title: 'American Heart Association: blood pressure categories', url: 'https://www.heart.org/en/health-topics/high-blood-pressure/understanding-blood-pressure-readings' },
+  'swri-rad': { kind: 'research', short: 'MSL RAD estimate (SwRI)', title: 'SwRI: radiation exposure associated with a trip to Mars (MSL RAD)', url: 'https://www.swri.org/press-release/swri-led-team-calculates-radiation-exposure-associated-trip-mars' },
+  'aha-bp': { kind: 'clinical', short: 'Clinical norm (AHA)', title: 'AHA: stage 1 130-139 or 80-89; stage 2 140+ or 90+; severe above 180 and/or above 120', url: 'https://www.heart.org/en/health-topics/high-blood-pressure/understanding-blood-pressure-readings' },
   'ada-glucose': { kind: 'clinical', short: 'Clinical norm (ADA)', title: 'American Diabetes Association: diagnosis and hypoglycemia levels', url: 'https://diabetes.org/diabetes/a1c/diagnosis' },
-  'aasm-sleep': { kind: 'clinical', short: 'Clinical norm (AASM)', title: 'AASM / SRS: adults should sleep 7 or more hours', url: 'https://aasm.org/seven-or-more-hours-of-sleep-per-night-a-health-necessity-for-adults/' },
-  'clinical-vitals': { kind: 'clinical', short: 'Clinical norm (vital signs)', title: 'MedlinePlus: pulse, adults 60 to 100 beats per minute', url: 'https://medlineplus.gov/ency/article/003399.htm' },
-  'clinical-spo2': { kind: 'clinical', short: 'Clinical norm (pulse oximetry)', title: 'MedlinePlus: most healthy people have blood oxygen 95% to 100%', url: 'https://magazine.medlineplus.gov/pdf/Pulse_oximeters.PDF_.final_.011123.pdf' },
+  'cdc-sleep': { kind: 'clinical', short: 'Clinical norm (CDC)', title: 'CDC: adults 18-60 years need 7 or more hours of sleep', url: 'https://www.cdc.gov/sleep/about/index.html' },
+  'ada-hypo': { kind: 'clinical', short: 'Clinical norm (ADA)', title: 'ADA: low blood glucose is below 70 mg/dL', url: 'https://diabetes.org/living-with-diabetes/hypoglycemia-low-blood-glucose' },
+  'clinical-vitals': { kind: 'clinical', short: 'Clinical norm (vital signs)', title: 'MedlinePlus vital signs: pulse 60-100, breathing 12-18, temperature 36.5-37.3 °C', url: 'https://medlineplus.gov/ency/article/002341.htm' },
+  'clinical-spo2': { kind: 'clinical', short: 'Clinical norm (pulse oximetry)', title: 'MedlinePlus: normal SpO2 95-100%; contact provider at 92% or lower; immediate care at 88% or lower', url: 'https://medlineplus.gov/lab-tests/pulse-oximetry/' },
   'demo-assumption': { kind: 'assumption', short: 'Demo assumption', title: 'Demo assumption: illustrative value chosen for this prototype, not a clinical or NASA threshold', url: null },
 };
 
-export const KIND_LABEL = { nasa: 'NASA HRP', agency: 'Partner agency', clinical: 'Clinical norm', assumption: 'Demo assumption' };
+export const KIND_LABEL = { nasa: 'NASA HRP', agency: 'Partner agency', research: 'Research estimate', clinical: 'Clinical norm', assumption: 'Demo assumption' };

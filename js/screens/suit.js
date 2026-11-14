@@ -42,6 +42,8 @@ export function renderSuit(container, { record, seed = 1, onAlert } = {}) {
     runId++;
   };
   start(null);
+  // New mission day: keep the lines running, only move the stream to the new day's values.
+  container._suitSetRecord = (rec) => { record = rec; stream = createStream(record, { seed: seed + samples.length }); };
   btn.addEventListener('click', () => start({ type: 'spo2-drop', at: 8, depth: 7, length: 14 }));
 
   const tick = () => {

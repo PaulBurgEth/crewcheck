@@ -77,9 +77,10 @@ export function renderToday(root, hooks = {}) {
   const advisor = h('div', { class: 'advisor' }, [
     h('div', { class: 'adv-head' }, [h('span', { class: 'adv-title', text: 'AI advisor' }), confBadge('hypothesis'),
       h('span', { class: 'adv-origin', text: shown.advice.origin === 'live' ? 'AI-generated (Claude), live' : PRECOMPUTED_LABEL })]),
-    shown.advice.text ? h('div', { class: 'adv-text', text: shown.advice.text }) : h('div', { class: 'muted', text: v.status === 'green' ? 'Nothing to add today' : 'No advice for this day · rules still decide' }),
-    shown.advice.points.length ? h('ul', { class: 'adv-points' }, shown.advice.points.map((t) => h('li', { text: t }))) : null,
-    h('div', { class: 'adv-note', text: 'Advises only · never changes status or who acts · in this demo it runs on a cloud model; on a mission it would run on board' }),
+    shown.advice.points.length ? h('ul', { class: 'adv-points' }, shown.advice.points.map((t) => h('li', { text: t })))
+      : h('div', { class: 'muted', text: v.status === 'green' ? 'Nothing to add today' : 'No advice for this day · rules still decide' }),
+    shown.advice.text ? h('details', { class: 'adv-more' }, [h('summary', { text: 'Explain' }), h('div', { class: 'adv-text', text: shown.advice.text })]) : null,
+    h('div', { class: 'adv-note', title: 'In this demo the advisor runs on a cloud model; on a mission it would run on board', text: 'Advises only · never decides' }),
   ]);
 
   side.append(...[verdict, forecastRow, switcher, nodesBox, signalBox, actions, advisor, extra].filter(Boolean));
@@ -141,14 +142,15 @@ export function renderToday(root, hooks = {}) {
   }
 
   // Suit stream keeps running across re-renders for the same person and day.
-  const suitKey = `${p.id}|${state.day}`;
-  if (!suitCache || suitCache.key !== suitKey) {
+  const dayRecord = verdictFor().records.find((r) => r.day === state.day);
+  if (!suitCache || suitCache.personId !== p.id) {
     const node = h('div', { class: 'suit-box' });
-    suitCache = { key: suitKey, node };
+    suitCache = { personId: p.id, day: state.day, node };
     extra.append(node);
-    renderSuit(node, { record: verdictFor().records.find((r) => r.day === state.day), seed: state.day, onAlert: () => {} });
+    renderSuit(node, { record: dayRecord, seed: state.day, onAlert: () => {} });
   } else {
     extra.append(suitCache.node);
+    if (suitCache.day !== state.day) { suitCache.day = state.day; suitCache.node._suitSetRecord?.(dayRecord); }
   }
 
   if (state.system) {

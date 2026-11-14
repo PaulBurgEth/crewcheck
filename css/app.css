@@ -99,3 +99,5 @@ button.link{background:none;border:0;color:var(--muted);text-decoration:underlin
 .today-lower{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
 @media (max-width:760px){.today-lower{grid-template-columns:1fr}}
 @media (max-width:760px){main{display:flex;flex-direction:column}.hints,.today-head{order:-2}.today-timeline{order:-1;margin:0 0 12px}}
+.src-research{color:#f0abfc;border-color:rgba(240,171,252,.35)}
+.adv-more summary{cursor:pointer;color:#c4b5fd;font-size:13px}.adv-more .adv-text{margin-top:6px}

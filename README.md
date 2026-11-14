@@ -49,7 +49,8 @@ Built on the challenge's Resources tab:
 - CSA, [Bio-Monitor](https://www.asc-csa.gc.ca/eng/sciences/bio-monitor.asp): data model of the simulated suit stream ("modelled on", not "integrated with").
 - CSA, [Monitoring Radiation for Astronaut Health](https://www.asc-csa.gc.ca/eng/news/articles/2026/2026-02-26-monitoring-radiation-astronaut-health.asp).
 - SwRI press release on MSL RAD: about 1.8 mSv a day in cruise (used as a demo estimate).
-- Clinical norms: American Heart Association blood pressure categories; American Diabetes Association fasting glucose ranges; AASM/SRS 7+ hours of sleep; MedlinePlus pulse 60-100 bpm and SpO2 95-100%.
+- Clinical norms (pages opened 14.11.2026): [AHA blood pressure categories](https://www.heart.org/en/health-topics/high-blood-pressure/understanding-blood-pressure-readings); [ADA fasting glucose](https://diabetes.org/diabetes/a1c/diagnosis) and [low glucose below 70 mg/dL](https://diabetes.org/living-with-diabetes/hypoglycemia-low-blood-glucose); [CDC: adults need 7 or more hours of sleep](https://www.cdc.gov/sleep/about/index.html); [MedlinePlus vital signs](https://medlineplus.gov/ency/article/002341.htm) (pulse 60-100, breathing 12-18) and [pulse oximetry](https://medlineplus.gov/lab-tests/pulse-oximetry/) (SpO2 95-100%, immediate care at 88% or lower).
+- Demo assumptions (labelled in the app): Moon delay about 1.3 s, ISS "hours home", fever 38 °C, breathing 22+, glucose below 54, all drift magnitudes. No career radiation limit is shown, because the NASA-STD-3001 line could not be confirmed in this build.
 - Every threshold in the product lists its source on the Sources screen. Values without a confirmed source are labelled "Demo assumption".
 
 ## Synthetic data
