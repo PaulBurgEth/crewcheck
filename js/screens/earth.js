@@ -52,7 +52,7 @@ export default function render(root, { go } = {}) {
   // Chips show the signal name, not the rule id
   const ruleSignal = {};
   for (let d = rep.from; d <= state.day; d++) for (const f of verdictFor(p.id, d, m.id).ev.fired) ruleSignal[f.id] = f.signal;
-  const entries = rep.entries.map((e) => ({ ...e, fired: e.fired.map((id) => SIGNAL_LABEL[ruleSignal[id]]?.[0] || id) }));
+  const entries = rep.entries.map((e) => ({ ...e, fired: [...new Set(e.fired.map((id) => SIGNAL_LABEL[ruleSignal[id]]?.[0] || id))] }));
 
   const sig = h('div', { class: 'ea-signal' });
   const strip = statusStrip(p.id).slice(rep.from - 1, state.day);
@@ -90,5 +90,5 @@ export default function render(root, { go } = {}) {
     h('div', { class: 'ea-actions' }, [copyBtn]),
     h('div', { class: 'ea-foot', text: 'Simulated downlink · nothing leaves this browser' }),
   ]));
-  renderSignal(sig, { missionLabel: m.label, oneWayMin: m.oneWayMin, sent: cur.reply.sent, replyLabel: cur.reply.label });
+  renderSignal(sig, { missionLabel: m.label, oneWayMin: m.oneWayMin, sent: cur.reply.sent, replyLabel: cur.reply.sent ? 'Report sent' : '' });
 }

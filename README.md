@@ -13,7 +13,7 @@ On the ISS a flight surgeon answers in seconds. On the way to Mars a reply takes
 
 ## What you can try in 60 seconds
 1. **Drag the mission day** from day 1 to day 120: the body map, verdict and charts change.
-2. **Switch distance** (ISS, Moon, Mars transit, Mars surface): the same signals give "Ask the flight surgeon, reply in seconds" near Earth and "Act now yourself, report sent, reply ≥ 40 min" far away.
+2. **Switch distance** (ISS, Moon, Mars transit, Mars surface): the same signals give "Ask the flight surgeon, reply in seconds" near Earth and "Handle it yourself, report sent, reply ≥ 40 min" far away. On the Moon Earth answers in seconds but home is ~3 days away, so the crew medic acts with the flight surgeon live ("Decide together").
 3. **Tap a glowing zone** on the body: "Why?" explains the rule, the number and the source, stored on board.
 4. **Crew** shows all four members; tap a tile to open that person's monitor.
 5. **Simulate SpO2 drop** in the suit card: an alert fires from the stream with no manual input.

@@ -29,6 +29,7 @@ const section = (title, body, open = false) =>
 
 function threshold(r) {
   const sym = OPS[r.op];
+  if (r.display) return r.display;
   const num = String(r.value).replace('-', '−');
   let t;
   if (r.kind === 'delta') t = `${sym} ${num} ${UNIT[r.signal] || ''} vs personal norm`;
@@ -85,15 +86,21 @@ function rulesSection() {
 }
 
 function escalationSection() {
-  const ms = MISSIONS.filter((m) => ['iss', 'moon', 'mars-transit'].includes(m.id));
-  const near = (m) => m.id !== 'mars-transit';
-  const yellow = (m) => (near(m) ? 'Flight surgeon (reply in seconds)' : 'Self + report (reply ≥ 40 min)');
+  // Same matrix as js/engine/escalation.js, written out for flight surgeons and judges.
+  const ms = MISSIONS;
+  const cell = {
+    iss: { y: 'Flight surgeon (reply in seconds)', r: 'Crew medic + flight surgeon live', l: 'Flight surgeon (reply in seconds)' },
+    moon: { y: 'Decide together: crew medic acts, flight surgeon live', r: 'Crew medic + flight surgeon live, return option ~3 days', l: 'Decide together' },
+    'mars-transit': { y: 'Handle it yourself + report (reply ≥ 40 min)', r: 'Crew medic, act on board', l: 'Crew medic' },
+    mars: { y: 'Handle it yourself + report (reply ≥ 40 min); home only at a launch window', r: 'Crew medic, act on board', l: 'Crew medic' },
+  };
   const rows = [
     ['Green', ...ms.map(() => 'No action')],
-    ['Yellow', ...ms.map(yellow)],
-    ['Red', ...ms.map((m) => (near(m) ? 'Crew medic + flight surgeon live' : 'Crew medic, act on board'))],
-    ['Linked signals or failed countermeasure', ...ms.map((m) => (near(m) ? yellow(m) : 'Crew medic'))],
+    ['Yellow', ...ms.map((m) => cell[m.id].y)],
+    ['Red', ...ms.map((m) => cell[m.id].r)],
+    ['Linked signals or failed countermeasure', ...ms.map((m) => cell[m.id].l)],
     ['Delay source', ...ms.map((m) => srcTag(m.delaySource))],
+    ['Time home source', ...ms.map((m) => srcTag(m.careSource))],
   ];
   return [table(['Status', ...ms.map((m) => m.label)], rows, 'so-matrix')];
 }

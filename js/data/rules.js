@@ -20,7 +20,7 @@ export const RULES = [
   R('rr-y', 'lungs', 'rr', 'yellow', 'gte', 22, { source: 'demo-assumption', context: 'nasa-hazards', title: 'Breathing rate 22 or higher at rest (normal 12-18)', action: 're-measure' }),
   R('rr-r', 'lungs', 'rr', 'red', 'gte', 30, { source: 'demo-assumption', context: 'nasa-hazards', title: 'Breathing rate 30 or higher at rest', action: 'medic-now' }),
   // Eyes & brain (SANS)
-  R('vision-y', 'eyes', 'vision', 'yellow', 'gte', 1, { source: 'nasa-sans', context: 'nasa-sans', title: 'New change in vision', action: 'eye-check' }),
+  R('vision-y', 'eyes', 'vision', 'yellow', 'gte', 1, { display: 'changed: yes', source: 'nasa-sans', context: 'nasa-sans', title: 'New change in vision', action: 'eye-check' }),
   R('headache-y', 'eyes', 'headache', 'yellow', 'gte', 3, { source: 'demo-assumption', context: 'nasa-sans', title: 'Severe headache', action: 'eye-check' }),
   // Sleep
   R('sleep-y', 'sleep', 'sleepH', 'yellow', 'lt', 7, { window: 3, source: 'cdc-sleep', context: 'nasa-sleep', title: 'Under 7 h sleep (3-day mean)', action: 'light-schedule' }),
@@ -57,6 +57,9 @@ export const ACTIONS = {
   'talk': 'Talk with crew, private call to family',
   'exercise': 'Back to 1.5 h exercise a day',
 };
+
+// Actions whose content comes from a NASA countermeasure are Established even when the trigger threshold is an assumption.
+export const ACTION_SOURCE = { exercise: 'nasa-fitness', 'light-schedule': 'nasa-sleep' };
 
 export const SYSTEMS = [
   { id: 'heart', label: 'Heart', signals: ['sbp', 'dbp', 'hr'] },

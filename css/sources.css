@@ -27,3 +27,4 @@
 .so-list{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:15px}
 .so a{color:var(--blue)}
 .so a.src-nasa{color:#93c5fd}.so a.src-clinical{color:#86efac}.so a.src-assumption{color:#fcd34d}.so a.src-agency{color:#c4b5fd}
+@media (max-width:640px){.so-arrow{transform:rotate(90deg)}}

@@ -1,4 +1,4 @@
-import { COMBOS, ACTIONS } from '../data/rules.js';
+import { COMBOS, ACTIONS, ACTION_SOURCE } from '../data/rules.js';
 import { SOURCES } from '../data/sources.js';
 import { isReachable } from '../data/missions.js';
 
@@ -33,29 +33,38 @@ export function escalate(evaluation, mission, { followupFailed = false } = {}) {
     const key = f.action;
     if (seen.has(key)) continue;
     seen.add(key);
-    actions.push({ text: ACTIONS[key], confidence: confidenceOf(f.source), ruleId: f.id });
+    actions.push({ text: ACTIONS[key], confidence: confidenceOf(ACTION_SOURCE[key] || f.source), ruleId: f.id });
   }
 
   if (status !== 'yellow' && status !== 'red') {
     return { tier: 'none', notify: [], headline: 'All clear', sub: 'Keep the routine', actions: [], combos, reply, status };
   }
 
+  // Moon: Earth answers in seconds, but care is ~3 days away, so the crew medic acts with the flight surgeon live.
+  const together = reach && mission.id === 'moon';
   let tier;
   let notify;
   let headline;
   let sub;
   if (status === 'red') {
     tier = 'crew';
-    if (reach) {
-      notify = ['earth'];
+    notify = ['earth'];
+    if (together) {
+      headline = 'Crew medic now · flight surgeon live';
+      sub = 'Return option ~3 days · decide together';
+    } else if (reach) {
       headline = 'Crew medic now';
       sub = 'Flight surgeon on the line';
     } else {
-      notify = ['earth'];
       reply.sent = true;
       headline = 'Crew medic now · act on board';
       sub = `Report sent to Earth · ${reply.label}`;
     }
+  } else if (together) {
+    tier = 'crew';
+    notify = ['earth'];
+    headline = 'Decide together';
+    sub = 'Flight surgeon advises live · crew medic acts';
   } else if (reach) {
     tier = 'earth';
     notify = [];
@@ -65,17 +74,17 @@ export function escalate(evaluation, mission, { followupFailed = false } = {}) {
     tier = 'self';
     notify = ['earth'];
     reply.sent = true;
-    headline = 'Act now yourself';
+    headline = 'Handle it yourself';
     sub = `Report sent to Earth · ${reply.label}`;
   }
+  if (!reach && mission.id === 'mars') sub += ' · home only at a launch window';
 
   // Far from Earth, linked signals or a failed countermeasure bring in the crew medic earlier.
   if (!reach && tier === 'self' && (combos.length || followupFailed)) {
     tier = 'crew';
-    headline = followupFailed ? 'Countermeasure did not work · crew medic' : 'Linked signals · crew medic';
+    headline = followupFailed ? 'Countermeasure partly worked · crew medic' : 'Linked signals · crew medic';
   }
   if (tier === 'crew' || tier === 'earth') actions.push({ text: tier === 'earth' ? 'Ask the flight surgeon' : 'Crew medic review', confidence: 'ask', ruleId: null });
-  if (reach && status === 'red' && mission.id === 'moon') actions.push({ text: 'Prepare return option (~3 days)', confidence: 'ask', ruleId: null });
 
   return { tier, notify, headline, sub, actions, combos, reply, status, tierIndex: TIERS.indexOf(tier) };
 }
