@@ -6,19 +6,26 @@ import { icon } from './icons.js';
 const NODE = { self: ['person', 'Me'], crew: ['cross', 'Crew medic'], earth: ['cross', 'Flight surgeon'] };
 const LEN = { iss: 0.12, moon: 0.34, 'mars-transit': 1, mars: 1 };
 
-const shipSvg = () => el('svg', { class: 'scn-glyph', viewBox: '0 0 44 44', 'aria-hidden': 'true' }, [
+// Shared by the Monitor scene and the Earth screen: line length and compressed travel time follow the delay.
+export function linkOf(m) {
+  const oneWayS = m.oneWayMin * 60;
+  const far = oneWayS >= 30;
+  return { len: LEN[m.id] ?? 1, oneWayS, far, roundMs: far ? 3200 : 700 };
+}
+
+export const shipSvg = () => el('svg', { class: 'scn-glyph', viewBox: '0 0 44 44', 'aria-hidden': 'true' }, [
   el('path', { d: 'M8 22 L20 14 L36 18 L36 26 L20 30 Z', class: 'scn-ship' }),
   el('path', { d: 'M20 14 L14 6 L24 8 L28 15 Z M20 30 L14 38 L24 36 L28 29 Z', class: 'scn-ship' }),
   el('circle', { cx: 30, cy: 22, r: 2.2, class: 'scn-win' }),
 ]);
-const earthSvg = () => el('svg', { class: 'scn-glyph', viewBox: '0 0 44 44', 'aria-hidden': 'true' }, [
+export const earthSvg = () => el('svg', { class: 'scn-glyph', viewBox: '0 0 44 44', 'aria-hidden': 'true' }, [
   el('circle', { cx: 22, cy: 22, r: 18, class: 'scn-sea' }),
   el('path', { d: 'M12 14 C18 10 22 14 20 19 C18 24 12 22 10 27 C8 22 8 17 12 14 Z', class: 'scn-land' }),
   el('path', { d: 'M27 24 C33 22 36 27 32 33 C28 36 25 31 27 24 Z', class: 'scn-land' }),
 ]);
 
-const mmss = (sec) => { const s = Math.max(0, Math.round(sec)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
-const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+export const mmss = (sec) => { const s = Math.max(0, Math.round(sec)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
+export const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function node(id) {
   const [ic, name] = NODE[id];
@@ -48,11 +55,10 @@ export function createScene(container, { onMission, onCompare } = {}) {
   // Timer, not requestAnimationFrame: the first frame and the final text appear even in a background tab.
   function animate(m, travel) {
     clearInterval(timer);
-    const oneWayS = m.oneWayMin * 60;
+    const { oneWayS, far, roundMs } = linkOf(m);
     if (!travel) { env.hidden = true; return; }
     env.hidden = false;
-    const far = oneWayS >= 30;
-    const D = reduced() ? 1 : far ? 3200 : 700;
+    const D = reduced() ? 1 : roundMs;
     const t0 = Date.now();
     const draw = (k) => {
       const out = k < 0.5;
@@ -89,7 +95,7 @@ export function createScene(container, { onMission, onCompare } = {}) {
       'data-mission': mi.id, title: `Care: ${mi.careLabel}`, onclick: () => onMission?.(mi.id),
     }, [h('span', { class: 'scn-ms-l' }, mi.label)])));
     cmpBtn.setAttribute('aria-pressed', String(compare));
-    container.style.setProperty('--len', String(LEN[m.id] ?? 1));
+    container.style.setProperty('--len', String(linkOf(m).len));
     for (const [id, n] of Object.entries(nodes)) {
       n.classList.toggle('scn-act', v.tier === id);
       n.classList.toggle('scn-notify', v.tier !== id && (v.notify || []).includes(id));
