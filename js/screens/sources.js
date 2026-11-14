@@ -4,6 +4,7 @@ import { RULES, COMBOS, SYSTEMS } from '../data/rules.js';
 import { MISSIONS } from '../data/missions.js';
 import { PASSPORT } from '../demo/passport.js';
 import { WEIGHTS, POINTS } from '../engine/score.js';
+import { AGENT_CAPS, AGENT_NEVER, agentMay } from '../engine/agent.js';
 
 const OPS = { gte: '≥', lte: '≤', gt: '>', lt: '<' };
 const KIND_ORDER = ['nasa', 'agency', 'clinical', 'assumption'];
@@ -26,6 +27,18 @@ const table = (head, rows, cls = '') =>
 
 const section = (title, body, open = false) =>
   h('details', { class: 'so-sec', open }, [h('summary', { text: title }), h('div', { class: 'so-body' }, body)]);
+
+// Onboard agent: what it may do at each distance, and what it never does (design assumption).
+function agentSection() {
+  const yes = (on) => h('span', { class: on ? 'ag-yes' : 'ag-no', text: on ? '✓' : '–' });
+  const head = ['Action', ...['iss', 'moon', 'mars-transit'].map((id) => MISSIONS.find((m) => m.id === id).label)];
+  const rows = Object.entries(AGENT_CAPS).map(([id, c]) => [c.label, ...['iss', 'moon', 'mars-transit'].map((mid) => yes(agentMay(MISSIONS.find((m) => m.id === mid)).includes(id)))]);
+  return [
+    table(head, rows),
+    h('div', { class: 'ag-never' }, [h('b', { text: 'Never, at any distance: ' }), h('span', { text: AGENT_NEVER.join(' · ') })]),
+    h('p', { class: 'so-note', text: 'Rules decide every status and who acts. The agent does non-clinical steps; clinical steps wait for a person to approve. AI writes only the handover note and the answers to three fixed questions. Design assumption, simulated.' }),
+  ];
+}
 
 function threshold(r) {
   const sym = OPS[r.op];
@@ -163,6 +176,7 @@ export default function render(root) {
     section('Overview', topBand(), true),
     section('Rules', rulesSection()),
     section('Escalation by distance', escalationSection()),
+    section('What the onboard agent can and cannot do', agentSection()),
     section('Synthetic data passport', passportSection()),
     section('CrewCheck Index', indexSection()),
     section('All sources', allSources()),

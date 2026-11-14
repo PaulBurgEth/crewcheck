@@ -69,14 +69,16 @@ export function renderVerdict(container, { ev, v, records, mission, onRule, self
       h('div', { class: 'vd-k' }, 'What'),
       h('div', { class: 'vd-icons' }, [...new Set(fired.map((f) => f.system))].map((s) => h('span', { class: `vd-ic d-${ev.systems[s].status}`, title: s }, [icon(SYSTEM_ICON[s] || 'check')]))),
     ]);
-    const why = h('div', { class: 'vd-part vd-why' }, [h('div', { class: 'vd-k' }, 'Why'), ...fired.slice(0, 4).map((f) => {
+    // The scale legend opens on hover or tap of the info mark, so it costs no words on screen.
+    const legendBtn = h('button', { type: 'button', class: 'vd-info', 'aria-label': 'How to read the scales: bar personal norm, line threshold, dot now', 'aria-expanded': 'false', onclick: (e) => { const b = e.currentTarget; const on = b.getAttribute('aria-expanded') !== 'true'; b.setAttribute('aria-expanded', String(on)); } }, 'i');
+    const why = h('div', { class: 'vd-part vd-why' }, [h('div', { class: 'vd-k' }, ['Why', legendBtn]), ...fired.slice(0, 4).map((f) => {
       const sc = miniScale({ rule: f, status: ev.signals[f.signal]?.status || f.level, records, day: ev.day, base: ev.baseline?.[f.signal] });
       return h('button', { type: 'button', class: 'vd-scale', title: `${f.title} · open rule and source`, onclick: () => onRule?.(f.system) }, [
         h('span', { class: 'vd-sl' }, sc.label),
         sc.svg, sc.sparkSvg,
         h('span', { class: 'vd-sv' }, `${fmt(sc.now)} ${sc.unit}`),
       ]);
-    }), h('div', { class: 'vd-legend', 'aria-hidden': 'true' }, [
+    }), h('div', { class: 'vd-legend', role: 'note' }, [
       h('span', {}, [h('i', { class: 'lg-norm' }), 'personal norm']),
       h('span', {}, [h('i', { class: 'lg-thr' }), 'threshold']),
       h('span', {}, [h('i', { class: 'lg-now' }), 'now']),

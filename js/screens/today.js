@@ -1,11 +1,12 @@
 import { h, confBadge } from '../ui.js';
 import { state, set, person, mission, verdictFor, statusStrip, eventsFor, setLiveAlert, localEntry } from '../state.js';
 import { MISSIONS, missionById } from '../data/missions.js';
-import { SYSTEMS, ACTIONS } from '../data/rules.js';
+import { SYSTEMS } from '../data/rules.js';
 import { renderBody } from '../viz/body.js';
 import { renderTimeline } from '../viz/timeline.js';
 import { createScene } from '../viz/scene.js';
-import { icon, ACTION_ICON } from '../viz/icons.js';
+import { icon } from '../viz/icons.js';
+import { agentMay, AGENT_CAPS } from '../engine/agent.js';
 import { renderWhy } from './why.js';
 import { renderVerdict } from './verdict.js';
 import { nextCrossings, ADAPTATION_DAYS } from '../engine/forecast.js';
@@ -15,11 +16,12 @@ import { renderRadiation } from './radiation-card.js';
 import { renderInstruments } from './instruments.js';
 import { doseSummary } from '../engine/radiation.js';
 import { findAdvice, PRECOMPUTED_LABEL, QUESTIONS } from '../data/advisor-precomputed.js';
-import { attachAdvice, advisorPayload } from '../engine/advisor.js';
+import { attachAdvice } from '../engine/advisor.js';
 import { evaluate } from '../engine/evaluate.js';
 import { escalate } from '../engine/escalation.js';
-import { getLiveAdvice, requestLiveAdvice, PROXY_URL } from './advisor-live.js';
+import { getLiveAdvice, requestLiveAdvice, PROXY_URL, livePayload } from './advisor-live.js';
 import { story, renderStoryBar, decorate, currentStep } from './story.js';
+import { renderCase, renderAgentLog } from './case-card.js';
 
 const flagged = (ev) => Object.entries(ev.systems).filter(([, s]) => s.status === 'yellow' || s.status === 'red').map(([k]) => k).sort().join(',');
 const EVENT_ICON = { adaptation: 'moon', 'missed-workouts': 'run', 'slow-drift': 'moon', 'treadmill-maintenance': 'run', 'on-call': 'clock', countermeasure: 'shield', spe: 'rad' };
@@ -124,9 +126,10 @@ export function renderToday(root, hooks = {}) {
   const sysDots = SYSTEMS.map((s) => ({ label: s.label, status: ev.systems[s.id].status }));
   shell.sceneApi.update({
     missions: MISSIONS, mission: m, v, compare, replay: story.on ? currentStep().id : '', selfName: p.name.split(' ')[0],
+    may: Object.entries(AGENT_CAPS).map(([id, c]) => ({ ...c, on: agentMay(m).includes(id) })),
     compareRows: [
-      { title: 'Near Earth', mission: near, tier: escalate(ev, near).tier, signals: sysDots },
-      { title: 'Deep space', mission: deep, tier: escalate(ev, deep, { followupFailed: fu?.state === 'not-worked' }).tier, signals: sysDots },
+      { title: 'Near Earth', mission: near, tier: escalate(ev, near).tier, signals: sysDots, may: agentMay(near).length },
+      { title: 'Deep space', mission: deep, tier: escalate(ev, deep, { followupFailed: fu?.state === 'not-worked' }).tier, signals: sysDots, may: agentMay(deep).length },
     ],
   });
 
@@ -173,16 +176,14 @@ export function renderToday(root, hooks = {}) {
 
   // 3 ACT: action cards, report to Earth, follow-up check, advisor bubble.
   const actKids = [h('div', { class: 'col-h' }, [h('span', { class: 'col-n', text: '3' }), h('span', { text: 'Act' })])];
-  const cards = v.actions.map((a) => {
-    const key = Object.keys(ACTIONS).find((k) => ACTIONS[k] === a.text);
-    const [ic, words] = ACTION_ICON[key] || ['cross', /surgeon/i.test(a.text) ? 'Ask surgeon' : 'Medic review'];
-    return h('div', { class: `act-card ac-${a.confidence}`, title: a.text }, [h('span', { class: 'act-ic' }, [icon(ic)]), h('span', { class: 'act-w', text: words }), confBadge(a.confidence)]);
-  });
-  // On the Act step of the story the badge meanings are spelled out once.
-  const badgeKey = story.on && currentStep().id === 'act' && cards.length
-    ? h('div', { class: 'act-key' }, [confBadge('established'), h('span', { text: 'NASA or clinical source' }), confBadge('hypothesis'), h('span', { text: 'confirm with a repeat check' }), confBadge('ask'), h('span', { text: 'a person decides' })])
-    : null;
-  actKids.push(h('div', { class: 'act-cards', 'data-spot': 'act' }, cards.length ? [...cards, badgeKey] : [h('div', { class: 'act-none' }, [icon('check'), h('span', { text: 'Keep the routine' })])]));
+  // The onboard agent's case card replaces loose action cards; clinical steps wait for Approve.
+  const cmDay = eventsFor(p.id).find((e) => e.id === 'countermeasure')?.day ?? null;
+  actKids.push(renderCase({
+    person: p, records, strip, v, mission: m, day: state.day, countermeasureDay: cmDay,
+    live: getLiveAdvice(p.id, state.day, 'handover')?.text || null,
+    reveal: story.on && currentStep().id === 'act',
+    onChange: () => set({}), onLog: () => { drawer = true; set({}); },
+  }));
   actKids.push(advisorBubble(p, ev, v, m, records));
   if (fu && fu.state !== 'none' && state.day <= fu.dueDay + 14) actKids.push(followUpCard(fu, records));
   shell.act.replaceChildren(...actKids);
@@ -193,7 +194,9 @@ export function renderToday(root, hooks = {}) {
   if (drawer) {
     const rad = h('div', { class: 'rad-box' });
     const ins = h('div', { class: 'ins-box' });
-    shell.drawer.replaceChildren(h('div', { class: 'drawer-h' }, [h('span', { text: 'Radiation · instruments' }), h('button', { type: 'button', class: 'why-x', 'aria-label': 'Close', onclick: () => { drawer = false; set({}); }, text: '×' })]), rad, ins);
+    const cmD = eventsFor(p.id).find((e) => e.id === 'countermeasure')?.day ?? null;
+    shell.drawer.replaceChildren(h('div', { class: 'drawer-h' }, [h('span', { text: 'Agent log · radiation · instruments' }), h('button', { type: 'button', class: 'why-x', 'aria-label': 'Close', onclick: () => { drawer = false; set({}); }, text: '×' })]),
+      renderAgentLog({ person: p, records, strip, mission: m, day: state.day, countermeasureDay: cmD }), rad, ins);
     renderRadiation(rad, { records, day: state.day });
     renderInstruments(ins, { day: state.day });
   }
@@ -216,9 +219,10 @@ export function renderToday(root, hooks = {}) {
   lastStep = step;
 
   if (PROXY_URL && v.status !== 'green') {
-    const payload = advisorPayload(ev, v, m);
+    const payload = livePayload(ev, v, m, records, fu);
     if (!getLiveAdvice(p.id, state.day)) requestLiveAdvice(p.id, state.day, payload, () => set({}));
     if (advQ && !getLiveAdvice(p.id, state.day, advQ)) requestLiveAdvice(p.id, state.day, payload, () => set({}), advQ);
+    if (!getLiveAdvice(p.id, state.day, 'handover')) requestLiveAdvice(p.id, state.day, payload, () => set({}), 'handover');
   }
 }
 renderToday.persistent = true;

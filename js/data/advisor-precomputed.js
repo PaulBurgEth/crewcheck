@@ -111,6 +111,22 @@ export const ANSWERS = {
   },
 };
 
+// Handover notes for the crew medic, written from the structured case (rules, numbers, actions already taken).
+// Same origin and limits as the advice above; the agent never writes them from free text.
+export const HANDOVER = {
+  'maya:103': 'Maya\'s 3-night sleep average fell under 7 hours. The agent set sleep reminders and sent a report to Earth. Nothing for the medic yet; sleep is re-checked in 3 days.',
+  'maya:113': 'Sleep, mood and systolic pressure are off together since day 113 (systolic 130). The agent scheduled a pressure re-measure, set reminders, sent the report and paged you. Please review pressure and talk with Maya about sleep and workload.',
+  'maya:120': 'Three linked signals for a week: sleep about 6 h, mood 2 of 5, systolic about 133. Re-measure, reminders and the Earth report are done. Please review and agree on the light and sleep schedule starting tomorrow.',
+  'maya:128': 'Re-check after 7 days: sleep is back in range, systolic pressure and mood are not. The case stays open and is stepped up to you. Please plan daily pressure readings and a longer talk about mood.',
+  'maya:130': 'Sleep and mood recovered; systolic pressure is still around 131. The agent keeps the re-measure schedule. Please watch the pressure trend daily.',
+  'sofia:120': 'Sofia\'s sleep is under 7 hours during on-call week. Reminders and the report are done. Please hand over two night calls and re-check sleep after the duty week.',
+  'kenji:108': 'Kenji\'s exercise is under 60 minutes a day while the treadmill is down. Reminders are set. Please check resistance device minutes and body mass weekly.',
+};
+export function findHandover(personId, day, openDay) {
+  for (let d = day; d >= openDay; d--) if (HANDOVER[`${personId}:${d}`]) return HANDOVER[`${personId}:${d}`];
+  return null;
+}
+
 // Story days have answers; nearby days reuse the closest earlier answer if the same systems are flagged.
 export function findAdvice(personId, day, flaggedSystems, flaggedAt) {
   for (let d = day; d >= day - 10; d--) {
