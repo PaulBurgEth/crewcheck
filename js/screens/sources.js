@@ -1,4 +1,6 @@
 import { h, confBadge, CONF } from '../ui.js';
+import { icon } from '../viz/icons.js';
+import { el } from '../viz/svg.js';
 import { SOURCES, KIND_LABEL } from '../data/sources.js';
 import { RULES, COMBOS, SYSTEMS } from '../data/rules.js';
 import { MISSIONS } from '../data/missions.js';
@@ -52,23 +54,63 @@ function threshold(r) {
   return t.replace(/\s+/g, ' ').trim();
 }
 
+const ARROW_D = { right: 'M3 12h16M14 7l5 5-5 5', down: 'M12 3v14M7 12l5 5 5-5' };
+function dgArrow(kind, dashed) {
+  return el('svg', { class: `so-dg-arr so-dg-arr-${kind}${dashed ? ' so-dg-dash' : ''}`, viewBox: '0 0 24 24', 'aria-hidden': 'true' },
+    [el('path', { d: ARROW_D[kind === 'flow' ? 'right' : 'down'], fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-dasharray': dashed ? '3 3' : null })]);
+}
+function dgNode(cls, ic, label, cap, extra) {
+  return h('div', { class: `so-dg-node ${cls}` }, [
+    h('span', { class: 'so-dg-disc' }, [icon(ic)]),
+    h('b', { text: label }),
+    h('span', { class: 'so-dg-cap', text: cap }),
+    ...(extra ? [extra] : []),
+  ]);
+}
+
 function topBand() {
-  const layers = [
-    ['Rules decide', 'status, tier'],
-    ['Forecast warns', 'trend to threshold'],
-    ['AI advisor explains', 'never changes the verdict'],
-  ];
-  const strip = h('div', { class: 'so-layers' });
-  layers.forEach(([a, b], i) => {
-    if (i) strip.append(h('span', { class: 'so-arrow', 'aria-hidden': 'true', text: '→' }));
-    strip.append(h('div', { class: 'so-layer' }, [h('b', { text: a }), h('span', { text: b })]));
-  });
+  const dots = h('span', { class: 'so-dg-dots', 'aria-hidden': 'true' }, ['green', 'yellow', 'red'].map((c) => h('i', { class: `dot d-${c}` })));
+  const verdict = dgNode('so-dg-verdict', 'flag', 'Verdict', 'status, who acts', dots);
+  const ai = dgNode('so-dg-ai', 'spark', 'AI explains', 'reads, never decides');
+  // Down: AI reads the verdict. Up, crossed out: nothing flows back from AI into the verdict.
+  const blocked = el('svg', { class: 'so-dg-arr so-dg-block', viewBox: '0 0 24 24', 'aria-hidden': 'true' }, [
+    el('path', { d: 'M12 21V7M7 12l5-5 5 5', fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }),
+    el('path', { d: 'M4 4l16 16', fill: 'none', stroke: 'var(--red)', 'stroke-width': 2.4, 'stroke-linecap': 'round' }),
+  ]);
+  const aiLink = h('div', { class: 'so-dg-link' }, [dgArrow('down', true), blocked, h('span', { text: 'never changes the verdict' })]);
+  const chain = h('div', { class: 'so-dg-chain' }, [
+    dgNode('so-dg-rules', 'rule', 'Rules decide', 'status and tier'),
+    dgArrow('flow'),
+    dgNode('so-dg-fc', 'flask', 'Forecast warns', 'trend to threshold'),
+    dgArrow('flow'),
+    h('div', { class: 'so-dg-end' }, [verdict, aiLink, ai]),
+  ]);
+  const can = h('ul', { class: 'so-dg-list' }, Object.values(AGENT_CAPS).map((c) =>
+    h('li', {}, [h('span', { class: 'so-dg-mark so-dg-can' }, [icon(c.icon)]), h('span', { text: c.label })])));
+  const cannot = h('ul', { class: 'so-dg-list' }, AGENT_NEVER.map((t) =>
+    h('li', {}, [h('span', { class: 'so-dg-mark so-dg-cant', 'aria-hidden': 'true', text: '✕' }), h('span', { text: t })])));
+  const agent = h('div', { class: 'so-dg-agent' }, [
+    h('div', { class: 'so-dg-agent-head' }, [
+      h('span', { class: 'so-dg-disc' }, [icon('shield')]),
+      h('b', { text: 'Onboard agent' }),
+      h('span', { class: 'so-dg-tag', text: 'design assumption' }),
+    ]),
+    h('div', { class: 'so-dg-acts', text: 'acts on rules' }),
+    h('div', { class: 'so-dg-cols' }, [
+      h('div', {}, [h('h4', { text: 'Can' }), can]),
+      h('div', {}, [h('h4', { text: 'Cannot' }), cannot]),
+    ]),
+  ]);
+  const diagram = h('div', {
+    class: 'so-dg', role: 'group',
+    'aria-label': 'Rules decide, forecast warns, verdict; AI explains on the side and never changes the verdict. The onboard agent acts on rules.',
+  }, [chain, agent]);
   const legend = h('div', { class: 'so-legend' }, ['established', 'hypothesis', 'ask'].map((c) =>
     h('div', { class: 'so-leg' }, [confBadge(c), h('span', { text: CONF[c].label })])));
   return [
     h('div', { class: 'so-banner', text: 'Not a medical device · Synthetic data · Educational prototype' }),
-    h('p', { class: 'so-tag', text: 'AI advises, rules decide.' }),
-    strip,
+    h('p', { class: 'so-tag', text: 'AI advises · rules decide' }),
+    diagram,
     legend,
   ];
 }

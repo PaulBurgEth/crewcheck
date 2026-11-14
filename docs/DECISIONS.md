@@ -28,3 +28,8 @@ Architecture source: NASA_SpaceApps_2026_ARCHITECTURE.md (approved 14.11.2026), 
 - **Motion**: timers, not rAF (works in background tabs); with `prefers-reduced-motion` every envelope is shown landed, tag "Motion off".
 - **Fragile**: the travel time is compressed (20 min shown in 3.2 s; ISS/Moon 0.7 s), stated on the screen. Envelopes fly with a fixed stagger; with many messages they queue on board.
 - **Rejected**: one big fixed-size SVG (does not reflow to 375 px); per-envelope real-time ratios (Moon 1.3 s vs Mars 20 min is invisible on any one scale).
+## G8: Sources overview as a picture (14.11.2026)
+- **What**: the Overview panel of Sources shows the decision chain as icon nodes "Rules decide → Forecast warns → Verdict". "AI explains" sits off the chain under the verdict: a dashed arrow from the verdict down to AI (AI reads), a crossed-out arrow back up (nothing flows from AI into the verdict), label "never changes the verdict". Beside it, the onboard agent with "Can" (`AGENT_CAPS`) and "Cannot" (`AGENT_NEVER`), tagged "design assumption", "acts on rules". Tables below unchanged.
+- **Why**: QA proposal Г8; "AI does not decide" must be visible at a glance, not read in a sentence.
+- **How**: HTML grid/flex with small inline SVG arrows and the shared icon set (reflows to 375 px; vertical chain under 640 px). Agent lists come from `js/engine/agent.js` exports, so the picture cannot drift from the agent's real limits.
+- **Rejected**: one fixed-size SVG (no reflow); AI as a fourth box in the chain (reads as if AI is a decision step).
