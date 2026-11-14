@@ -1,7 +1,10 @@
 import { h } from '../ui.js';
 import { el } from '../viz/svg.js';
 import { state, saveEntry, localEntry, recordsOf, verdictFor, person } from '../state.js';
+
+const filled = (v) => v !== '' && v != null;
 import { validateCheckin } from '../engine/validate.js';
+import { renderDayRing, renderPatch } from '../viz/badges.js';
 
 export const CHECKIN_FIELDS = [
   { id: 'mood', label: 'Mood', how: 'Tap the face that fits today', why: 'Mood drifts early under isolation (NASA)' },
@@ -14,6 +17,7 @@ const AUTO = ['Pulse', 'Pressure', 'Breathing', 'Temp', 'SpO2', 'Activity', 'Sle
 const MOUTHS = ['M12 29 Q20 21 28 29', 'M13 28 Q20 24 27 28', 'M13 27 L27 27', 'M13 25 Q20 30 27 25', 'M11 24 Q20 34 29 24'];
 
 let savedKey = null;
+let justSaved = false;
 
 function face(n) {
   return el('svg', { viewBox: '0 0 40 40', width: 44, height: 44, class: 'ci-face-svg', 'aria-hidden': 'true' }, [
@@ -56,7 +60,12 @@ export default function render(root, { go } = {}) {
   const errs = {};
   const errBox = (key) => { errs[key] = h('div', { class: 'ci-err', role: 'alert' }); return errs[key]; };
   const moodBtns = [], visBtns = [], headBtns = [];
-  const mark = (btns, val) => btns.forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.v) === Number(val) && val !== '')));
+  const ringBox = h('div', { class: 'ci-ring' });
+  const drawRing = (closed = false) => ringBox.replaceChildren(renderDayRing({ closed, segments: [
+    { label: 'Suit', on: true }, { label: 'Mood', on: filled(form.mood) }, { label: 'Eyes & head', on: filled(form.vision) && filled(form.headache) },
+    { label: 'Glucose', on: filled(form.glucose) && form.glucose !== 'not a number' }, { label: 'Body mass', on: filled(form.mass) && form.mass !== 'not a number' },
+  ] }));
+  const mark = (btns, val) => { btns.forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.v) === Number(val) && val !== ''))); if (typeof drawRing === 'function') drawRing(); };
 
   for (let n = 1; n <= 5; n++) {
     moodBtns.push(h('button', { type: 'button', class: 'ci-face', 'data-v': n, 'aria-label': `Mood ${n} of 5`, onclick: () => { form.mood = n; mark(moodBtns, n); } }, [face(n)]));
@@ -69,7 +78,7 @@ export default function render(root, { go } = {}) {
     class: 'ci-input', type: 'number', inputmode: 'decimal', step: 'any', placeholder: ph, 'aria-label': label,
     value: form[key] === '' ? null : String(form[key]),
     // A number field reports letters as an empty value; keep them as invalid text so validation rejects them.
-    oninput: (e) => { form[key] = e.target.validity?.badInput ? 'not a number' : e.target.value; },
+    oninput: (e) => { form[key] = e.target.validity?.badInput ? 'not a number' : e.target.value; drawRing(); },
   });
   const field = (f, body, errKeys) => h('section', { class: 'ci-field' }, [
     h('div', { class: 'ci-fhead' }, [h('h3', { class: 'ci-flabel', text: f.label }), f.note ? h('span', { class: 'ci-note', text: f.note }) : null]),
@@ -80,9 +89,13 @@ export default function render(root, { go } = {}) {
   const status = h('div', { class: 'ci-status' });
   if (savedKey === `${personId}:${day}`) {
     const { v } = verdictFor(personId, day);
+    const crewDone = state.crew.map((c) => (c.id === personId ? true : recordsOf(c.id)[day - 1]?.mood != null));
     status.append(
-      h('div', { class: `ci-saved ci-res-${v.status}`, role: 'status', text: v.status === 'green' ? 'Saved · all clear · streak +1' : `Saved · ${v.status === 'red' ? 'RED' : 'Watch'}: ${v.headline}` }),
-      h('button', { type: 'button', class: 'ci-btn ci-ghost', onclick: () => go && go('today'), text: 'See my monitor' }),
+      h('div', { class: `ci-saved${v.status === 'red' ? ' ci-res-red' : ''}`, role: 'status' }, [
+        renderPatch({ done: crewDone, names: state.crew.map((c) => c.name), size: 44, flash: crewDone.every(Boolean) }),
+        h('span', { class: 'ci-saved-t', text: v.status === 'red' ? `Saved · ${v.headline}` : 'Saved · day closed' }),
+        h('button', { type: 'button', class: 'ci-btn ci-ghost', onclick: () => go && go('today'), text: v.status === 'green' ? 'Monitor: all clear' : `Monitor: ${v.headline}` }),
+      ]),
     );
   }
 
@@ -100,12 +113,14 @@ export default function render(root, { go } = {}) {
       return;
     }
     savedKey = `${personId}:${day}`;
+    justSaved = true;
     for (const k of ['glucose', 'mass']) if (String(form[k]).trim() === '') r.entry[k] = null;
     saveEntry(personId, day, r.entry);
   };
 
   root.replaceChildren(h('div', { class: 'ci' }, [
-    h('div', { class: 'ci-head' }, [h('h2', { class: 'ci-title', text: `Check-in · ${person().name} · Day ${day}` }), h('span', { class: 'ci-pill', text: '< 1 min' })]),
+    h('div', { class: 'ci-head' }, [h('h2', { class: 'ci-title', text: `Check-in · ${person().name} · Day ${day}` }), ringBox]),
+    status,
     h('div', { class: 'ci-auto' }, [
       h('div', { class: 'ci-auto-chips' }, AUTO.map((a) => h('span', { class: 'ci-chip', text: `${a} · auto ✓` }))),
       h('div', { class: 'ci-auto-note', text: 'From the suit — nothing to do' }),
@@ -119,6 +134,8 @@ export default function render(root, { go } = {}) {
     field(fMass, h('label', { class: 'ci-num' }, [input('mass', 'Body mass kg', 'kg'), h('span', { class: 'ci-unit', text: fMass.unit })]), ['mass']),
     field(fBp, h('div', { class: 'ci-num' }, [input('sbp', 'Systolic', 'sys'), h('span', { class: 'ci-unit', text: '/' }), input('dbp', 'Diastolic', 'dia'), h('span', { class: 'ci-unit', text: 'mmHg' })]), ['bp']),
     h('button', { type: 'button', class: 'ci-btn', onclick: save, text: 'Save' }),
-    status,
   ]));
+  drawRing(savedKey === `${personId}:${day}`);
+  // After saving, the reward sits at the top of the screen.
+  if (savedKey === `${personId}:${day}` && justSaved) { justSaved = false; window.scrollTo({ top: 0, behavior: 'smooth' }); }
 }

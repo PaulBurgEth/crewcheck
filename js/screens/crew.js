@@ -2,6 +2,7 @@ import { h } from '../ui.js';
 import { state, mission, verdictFor, recordsOf, localEntry } from '../state.js';
 import { personIndex, crewIndex, indexColor } from '../engine/score.js';
 import { renderRings } from '../viz/rings.js';
+import { renderPatch } from '../viz/badges.js';
 import { SYSTEMS } from '../data/rules.js';
 
 const TIER_LABEL = { none: 'All clear', self: 'Handles it alone', crew: 'Crew medic', earth: 'Flight surgeon' };
@@ -37,11 +38,7 @@ export default function renderCrew(root, { go }) {
     h('div', { class: 'crew-patch-wrap' }, [patch, h('div', { class: 'ci-sub', text: doneCount === 4 ? 'Crew patch complete: all checked in today' : `Crew patch: ${doneCount} of 4 checked in` })]),
   ]);
   root.append(head);
-  renderRings(patch, {
-    size: 96,
-    center: `${doneCount}/4`,
-    rings: [{ label: 'Crew checked in today', value: doneCount / 4, color: CSSV('blue') }],
-  });
+  patch.append(renderPatch({ done: rows.map((r) => r.done), names: rows.map((r) => r.p.name), size: 96, flash: doneCount === 4 }));
 
   const grid = h('div', { class: 'crew-grid' });
   for (const r of rows) {

@@ -308,3 +308,36 @@
 .cs-stages{grid-template-columns:auto auto auto auto auto;justify-content:start}
 .cs-st{display:inline-flex;align-items:center;gap:4px;padding:4px 7px}
 .cs-st .ic{width:14px;height:14px}
+/* gamification: streak chain, crew patch, day ring */
+.today.v2 .who{display:flex;align-items:center;gap:12px;pointer-events:auto}
+.stk{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);font-weight:600}
+.stk-dots{display:inline-flex;gap:3px}
+.stk-dots i{width:9px;height:9px;border-radius:50%;background:#2a3550}
+.stk-dots i.stk-on{background:var(--blue);box-shadow:0 0 6px rgba(96,165,250,.6)}
+.stk-dots i.stk-off{background:#3a4560;outline:1px dashed var(--muted);outline-offset:1px}
+.stk-dots i.stk-x{background:transparent}
+.stk-n{color:var(--text);font-size:15px}
+.stk-miss{color:var(--muted);font-weight:500}
+.patch{display:block;flex:none}
+.pt-rim{fill:none;stroke:#c9a54a;stroke-width:6}
+.pt-field{fill:#13203d;stroke:#2c3d63;stroke-width:1.5}
+.pt-chev{fill:#2c3d63}
+.pt-ship{fill:#c9d4ec}
+.pt-star{fill:#2a3550;stroke:#46557a;stroke-width:1}
+.pt-star.on{fill:var(--yellow);stroke:#fde68a;filter:drop-shadow(0 0 2px rgba(251,191,36,.8))}
+.patch.full .pt-rim{stroke:var(--yellow)}
+.patch.flash .pt-rim{animation:ptflash 1.2s ease 2}
+@keyframes ptflash{50%{stroke:#fff8d6;filter:drop-shadow(0 0 6px rgba(251,191,36,.9))}}
+.dring .dr-seg{fill:none;stroke:#26324d;stroke-width:10;stroke-linecap:round;transition:stroke .3s}
+.dring .dr-seg.on{stroke:var(--green)}
+.dring .dr-num{fill:var(--text);font-size:20px;font-weight:800}
+.dring.closed .dr-seg{stroke:var(--green)}
+.dring.closed{animation:drflash .9s ease 1}
+@keyframes drflash{40%{filter:drop-shadow(0 0 10px rgba(52,211,153,.9));transform:scale(1.06)}}
+.ci-ring{flex:none}
+.ci-saved{display:flex;align-items:center;gap:12px;flex-wrap:wrap;text-align:left;padding:10px 14px}
+.ci-saved .ci-btn{margin-left:auto;width:auto;padding:8px 14px;font-size:14px}
+.ci-saved-t{font-size:18px;font-weight:800}
+.ci-saved.ci-res-red{background:rgba(248,113,113,.14);color:var(--red);border-color:var(--red)}
+@media (prefers-reduced-motion:reduce){.patch.flash .pt-rim,.dring.closed{animation:none}}
+@media (max-width:760px){.today.v2 .who{flex-wrap:wrap;gap:8px}.ci-saved .ci-btn{margin-left:0}}
