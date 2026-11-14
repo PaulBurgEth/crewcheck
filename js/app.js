@@ -11,6 +11,7 @@ const SCREENS = [
   { id: 'sources', label: 'Sources' },
 ];
 const renderers = { today: renderToday };
+const failed = new Set();
 export function registerScreen(id, fn) { renderers[id] = fn; }
 
 const app = document.getElementById('app');
@@ -46,6 +47,7 @@ function render() {
   else {
     app.replaceChildren();
     if (fn) fn(app, { go });
+    else if (failed.has(state.route)) app.append(h('div', { class: 'boot-fail' }, [h('p', { text: 'This screen did not load.' }), h('button', { type: 'button', text: 'Reload', onclick: () => location.reload() })]));
     else app.append(h('p', { class: 'soon', text: 'Loading…' }));
   }
   window.scrollTo(0, scrollY);
@@ -56,12 +58,15 @@ document.querySelector('.foot').append(' · ', h('button', { class: 'link', text
 Object.assign(state, readHash());
 subscribe(render);
 window.addEventListener('hashchange', () => { const p = readHash(); if ((p.route && p.route !== 'today') || (p.personId && p.personId !== state.personId)) resetTimeline(); set({ system: null, ...p }); });
+window.ccBooted = true;
 render();
 
 // Screens added in later steps register themselves.
 const LATER = ['crew', 'checkin', 'trends', 'earth', 'sources'];
 for (const id of LATER) {
-  import(`./screens/${id}.js`).then((mod) => { registerScreen(id, mod.default); if (state.route === id) render(); }).catch(() => {});
+  const load = (tries) => import(`./screens/${id}.js`).then((mod) => { registerScreen(id, mod.default); if (state.route === id) render(); })
+    .catch(() => (tries > 0 ? new Promise((r) => setTimeout(r, 1500)).then(() => load(tries - 1)) : failed.add(id) && render()));
+  load(2);
 }
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {

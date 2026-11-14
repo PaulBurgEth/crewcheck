@@ -47,9 +47,17 @@ export function renderSuit(container, { record, seed = 1, onAlert } = {}) {
   start(null);
   // New mission day: keep the lines running, only move the stream to the new day's values.
   container._suitSetRecord = (rec) => { record = rec; stream = createStream(record, { seed: seed + samples.length }); active = null; banner.hidden = true; banner.textContent = ''; };
-  btn.addEventListener('click', () => start({ type: 'spo2-drop', at: 8, depth: 7, length: 14 }));
+  btn.addEventListener('click', () => {
+    const ev = { type: 'spo2-drop', at: 1, depth: 7, length: 14 };
+    start(ev);
+    banner.className = 'suit-alert suit-sim'; banner.textContent = 'Simulating SpO2 drop…'; banner.hidden = false;
+    btn.disabled = true; btn.textContent = 'Dropping…';
+    clearTimeout(container._suitBtn);
+    container._suitBtn = setTimeout(() => { btn.disabled = false; btn.textContent = 'Simulate SpO2 drop'; }, (ev.at + ev.length + 3) * (reduced() ? 2000 : 700));
+    tick();
+  });
 
-  const tick = () => {
+  function tick() {
     if (!container.isConnected) { clearInterval(container._suitTimer); return; }
     const s = stream.next();
     samples.push(s);
@@ -75,6 +83,6 @@ export function renderSuit(container, { record, seed = 1, onAlert } = {}) {
       active = a;
       if (typeof onAlert === 'function') onAlert(a);
     }
-  };
+  }
   container._suitTimer = setInterval(tick, reduced() ? 2000 : 700);
 }

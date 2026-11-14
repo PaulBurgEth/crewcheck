@@ -21,6 +21,15 @@
 </header>
 <main id="app"><p class="boot">Loading…</p></main>
 <footer class="foot">Synthetic data · Educational prototype · Not a medical device</footer>
-<script type="module" src="js/app.js"></script>
+<script>
+// If any app module fails to load (network error, 503), show a reload button instead of a blank page.
+window.ccBootFail = function () {
+  var m = document.getElementById('app');
+  if (!m || window.ccBooted) return;
+  m.innerHTML = '<div class="boot-fail"><p>Part of the app did not load.</p><button type="button" onclick="location.reload()">Reload</button></div>';
+};
+setTimeout(function () { if (!window.ccBooted) window.ccBootFail(); }, 12000);
+</script>
+<script type="module" src="js/app.js" onerror="ccBootFail()"></script>
 </body>
 </html>

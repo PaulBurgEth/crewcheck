@@ -1,6 +1,6 @@
 // Offline support: the whole app is cached so it opens again without any network.
 // Bump VERSION on every release so judges never get a stale copy.
-const VERSION = 'crewcheck-v3';
+const VERSION = 'crewcheck-v5';
 const FILES = [
   './',
   './css/app.css',
@@ -64,6 +64,7 @@ self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
   e.respondWith(
     fetch(e.request).then((res) => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const copy = res.clone();
       caches.open(VERSION).then((c) => c.put(e.request, copy));
       return res;

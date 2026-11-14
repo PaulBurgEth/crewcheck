@@ -8,7 +8,7 @@ import { renderNodes } from '../viz/nodes.js';
 import { renderSignal } from '../viz/signal.js';
 import { renderTimeline } from '../viz/timeline.js';
 import { renderWhy } from './why.js';
-import { nextCrossings } from '../engine/forecast.js';
+import { nextCrossings, ADAPTATION_DAYS } from '../engine/forecast.js';
 import { renderSuit } from './suit.js';
 import { SIGNAL_LABEL } from '../data/explain.js';
 import { renderRings } from '../viz/rings.js';
@@ -80,7 +80,7 @@ export function renderToday(root, hooks = {}) {
     h('div', { class: 'where', text: `Day ${state.day} · ${m.label}` }),
     h('div', { class: 'rings-wrap' }, [ringsBox, h('div', { class: 'rings-legend' }, [
       h('span', { class: 'rl rl-suit', text: 'Suit' }), h('span', { class: 'rl rl-check', text: 'Check-in' }),
-      h('span', { class: 'rl rl-ex', text: 'Exercise' }), h('span', { class: 'rl-streak', text: `${streak}-day check-in streak` }),
+      h('span', { class: 'rl rl-ex', text: 'Exercise' }), h('span', { class: 'rl-streak', text: streak < state.day ? `${streak}-day check-in streak · missed day ${state.day - streak}` : `${streak}-day check-in streak` }),
     ])]),
   );
   renderRings(ringsBox, {
@@ -123,6 +123,7 @@ export function renderToday(root, hooks = {}) {
     ev.liveAlert ? h('div', { class: `live-chip lc-${ev.liveAlert.level}`, text: `Live suit alert · ${SIGNAL_LABEL[ev.liveAlert.signal][0]} ${ev.liveAlert.measured}` }) : null,
     h('div', { class: 'verdict-line', text: v.headline }),
     h('div', { class: 'verdict-sub', text: v.sub }),
+    state.day <= ADAPTATION_DAYS && v.status === 'yellow' ? h('div', { class: 'verdict-ctx', title: 'Short sleep and headaches are expected while the body adapts to microgravity', text: 'Adaptation week · expected' }) : null,
   ]);
   side.append(verdict);
 
