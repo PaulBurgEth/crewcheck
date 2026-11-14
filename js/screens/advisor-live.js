@@ -6,7 +6,7 @@ import { SIGNAL_LABEL } from '../data/explain.js';
 
 // Structured context for the live advisor: usual value, how many days, linked systems, steps already done.
 // Numbers and ids only; no free text ever leaves the page.
-export function livePayload(ev, v, mission, records) {
+export function livePayload(ev, v, mission, records, fu = null) {
   const r1 = (x) => (Number.isFinite(x) ? Math.round(x * 10) / 10 : null);
   const daysFiring = (id) => {
     let n = 0;
@@ -21,6 +21,7 @@ export function livePayload(ev, v, mission, records) {
     })),
   };
   if (v.combos?.length) out.linked = v.combos[0].systems;
+  if (fu && fu.state !== 'none') out.checked = fu.items.map((i) => ({ signal: i.signal, result: i.result }));
   const done = agentDay(v, mission).done.map((a) => a.id);
   if (done.length) out.done = done;
   return out;

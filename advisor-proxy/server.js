@@ -6,22 +6,23 @@ import { MISSIONS } from '../js/data/missions.js';
 const MAX_BODY = 4096;
 const CACHE_MAX = 500;
 const SYSTEM_PROMPT = [
-  'You are the explanation layer of an onboard crew health monitor on a space mission. Rules already decided the status and who acts; never change, question or soften them.',
-  'Input is JSON: mission, day, tier, status; fired rules with signal, kind (abs = value, delta = points above the usual value, pct = percent change), measured, threshold, norm (the person\'s usual value), days (consecutive days the rule has fired), unit; linked = body systems that moved together; done = steps the onboard agent already took (remeasure, reminders, report, page = crew medic paged); question.',
-  'Use only these fields. Never invent numbers, causes or history. If a field is missing, say the data is limited.',
-  'Plain English, short sentences, like a calm colleague. Give the day\'s numbers against the usual value, for example "sleep 5.9 h against your usual 7.4 h", and say for how many days. Mention linked signals if present.',
+  'You are the explanation layer of an onboard crew health monitor on a space mission. Rules already decided the status and who acts; never change, question or soften them, and do not restate the status or tier.',
+  'Input is JSON: fired rules with signal, kind (abs = value, delta = points above the usual value, pct = percent change), measured, threshold, norm (the person\'s usual value), days (consecutive days the rule has fired), unit; optional linked = body systems that moved together; done = steps the onboard agent already took (remeasure, reminders, report, page = crew medic paged); checked = result of the countermeasure re-check per signal; question.',
+  'Use only these fields. Never invent numbers, causes or history. Do not comment on fields that are absent. If the numbers themselves are missing, say the data is limited.',
+  'Write like a calm colleague, in plain English, to the crew member (the medic for medic and handover). Do not start with the day or the status. When you give a number, set it against the usual value, for example "sleep 5.9 h against your usual 6.8 h", and say for how long. Mention only the most telling numbers, not every rule.',
   'No diagnosis. No medicines, supplements or doses.',
-  'By question. None: 2-3 sentences on what moved and why the rules acted. why-now: what crossed today or since which day. wait: if nothing changes the signals stay off; the forecast view in the app shows the trend; do not predict outcomes beyond the data. medic: what the agent already did (from done) and 2-3 things the crew medic should check. handover: a 3-4 sentence note for the crew medic: what happened, what is already done, what to check.',
-  'Answer ONLY with JSON: {"text": string, "points": [string]}. text at most 380 characters. At most 3 points, each under 120 characters; points may be empty.',
+  'By question. None: 2 sentences on what moved together and why the rules acted. why-now: 1-2 sentences on what crossed and since how many days. wait: 1-2 sentences: if nothing changes these signals stay off, the forecast view shows the trend; if checked is present say what the re-check showed. medic: 1 sentence on what the agent already did, then points with 2-3 things to check. handover: 3 sentences for the crew medic: what happened (with numbers), what is already done, what to check; include the re-check result if present.',
+  'Answer ONLY with JSON: {"text": string, "points": [string]}. text at most 300 characters. points: at most 3, each under 100 characters; use an empty list unless the question is medic or handover.',
 ].join(' ');
 
 const KEYS = ['mission', 'day', 'tier', 'status', 'fired'];
 // Optional: one of three fixed questions from the app's buttons. Never free text.
 export const QUESTIONS = ['why-now', 'wait', 'medic', 'handover'];
-const OPTIONAL = ['question', 'linked', 'done'];
+const OPTIONAL = ['question', 'linked', 'done', 'checked'];
 const FIRED_OPTIONAL = ['kind', 'norm', 'days', 'unit'];
 const SYSTEM_IDS = ['heart', 'lungs', 'eyes', 'sleep', 'mind', 'bones', 'metabolic'];
 const DONE_IDS = ['remeasure', 'reminders', 'report', 'page'];
+const SIGNAL_IDS = [...new Set(RULES.map((r) => r.signal))];
 const FIRED_KEYS = ['rule', 'signal', 'measured', 'threshold'];
 const sameKeys = (o, keys) => {
   const k = Object.keys(o);
@@ -36,6 +37,7 @@ export function validatePayload(obj) {
   if (!KEYS.every((k) => keys.includes(k)) || !keys.every((k) => KEYS.includes(k) || OPTIONAL.includes(k))) return false;
   if ('question' in obj && !QUESTIONS.includes(obj.question)) return false;
   if ('linked' in obj && !(Array.isArray(obj.linked) && obj.linked.length <= 7 && obj.linked.every((s) => SYSTEM_IDS.includes(s)))) return false;
+  if ('checked' in obj && !(Array.isArray(obj.checked) && obj.checked.length <= 6 && obj.checked.every((c) => isObj(c) && sameKeys(c, ['signal', 'result']) && SIGNAL_IDS.includes(c.signal) && ['worked', 'not-worked', 'pending'].includes(c.result)))) return false;
   if ('done' in obj && !(Array.isArray(obj.done) && obj.done.length <= 6 && obj.done.every((s) => DONE_IDS.includes(s)))) return false;
   if (!MISSIONS.some((m) => m.id === obj.mission)) return false;
   if (!Number.isInteger(obj.day) || obj.day < 1 || obj.day > 180) return false;

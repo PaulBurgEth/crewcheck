@@ -219,7 +219,7 @@ export function renderToday(root, hooks = {}) {
   lastStep = step;
 
   if (PROXY_URL && v.status !== 'green') {
-    const payload = livePayload(ev, v, m, records);
+    const payload = livePayload(ev, v, m, records, fu);
     if (!getLiveAdvice(p.id, state.day)) requestLiveAdvice(p.id, state.day, payload, () => set({}));
     if (advQ && !getLiveAdvice(p.id, state.day, advQ)) requestLiveAdvice(p.id, state.day, payload, () => set({}), advQ);
     if (!getLiveAdvice(p.id, state.day, 'handover')) requestLiveAdvice(p.id, state.day, payload, () => set({}), 'handover');
