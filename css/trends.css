@@ -12,7 +12,7 @@
 .tr-k-yellow::before{background:var(--yellow)}
 .tr-k-red::before{background:var(--red)}
 .tr-k-cone::before{background:rgba(96,165,250,.3);border-top:2px dashed var(--blue);height:6px}
-.tr-sparks{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.tr-sparks{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
 .tr-spark{display:grid;gap:2px;text-align:left;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:8px 10px;cursor:pointer;font:inherit}
 .tr-spark:hover{border-color:var(--blue)}
 .tr-spark.st-yellow{border-left:4px solid var(--yellow)}

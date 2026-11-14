@@ -4,7 +4,7 @@ import { renderToday, resetTimeline } from './screens/today.js';
 
 const SCREENS = [
   { id: 'crew', label: 'Crew' },
-  { id: 'today', label: 'Me' },
+  { id: 'today', label: 'Monitor' },
   { id: 'checkin', label: 'Check-in' },
   { id: 'trends', label: 'Trends' },
   { id: 'earth', label: 'Earth' },
@@ -42,9 +42,12 @@ function render() {
   }, s.label)));
   const fn = renderers[state.route];
   const scrollY = window.scrollY;
-  app.replaceChildren();
-  if (fn) fn(app, { go });
-  else app.append(h('p', { class: 'soon', text: 'Coming in the next build step.' }));
+  if (fn?.persistent) fn(app, { go });
+  else {
+    app.replaceChildren();
+    if (fn) fn(app, { go });
+    else app.append(h('p', { class: 'soon', text: 'Loading…' }));
+  }
   window.scrollTo(0, scrollY);
 }
 

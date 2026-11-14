@@ -91,3 +91,31 @@ test('advice never changes the verdict', async () => {
   assert.equal(withAdvice.status, plain.status);
   assert.equal(withAdvice.headline, plain.headline);
 });
+
+test('Moon differs from ISS: crew medic acts with flight surgeon live', () => {
+  const ev = evaluate(withToday({ sbp: 134 }), 20);
+  const iss = escalate(ev, ISS);
+  const moon = escalate(ev, missionById('moon'));
+  assert.equal(moon.tier, 'crew');
+  assert.deepEqual(moon.notify, ['earth']);
+  assert.notEqual(moon.headline, iss.headline);
+});
+
+test('Mars surface shows a different status line than Mars transit', () => {
+  const ev = evaluate(withToday({ sbp: 134 }), 20);
+  const t = escalate(ev, MARS);
+  const s = escalate(ev, missionById('mars'));
+  assert.equal(s.tier, t.tier);
+  assert.notEqual(s.sub, t.sub);
+});
+
+test('yellow far from Earth is softer than "Act now"', () => {
+  const r = escalate(evaluate(withToday({ sbp: 134 }), 20), MARS);
+  assert.doesNotMatch(r.headline, /Act now/);
+});
+
+test('exercise countermeasure is Established (NASA HRP)', () => {
+  const recs = days(20); for (const r of recs.slice(10)) r.exerciseMin = 20;
+  const r = escalate(evaluate(recs, 20), MARS);
+  assert.equal(r.actions.find((a) => /exercise/.test(a.text)).confidence, 'established');
+});

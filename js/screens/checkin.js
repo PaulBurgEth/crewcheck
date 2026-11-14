@@ -1,6 +1,6 @@
 import { h } from '../ui.js';
 import { el } from '../viz/svg.js';
-import { state, saveEntry, localEntry, recordsOf } from '../state.js';
+import { state, saveEntry, localEntry, recordsOf, verdictFor, person } from '../state.js';
 import { validateCheckin } from '../engine/validate.js';
 
 export const CHECKIN_FIELDS = [
@@ -49,7 +49,9 @@ export default function render(root, { go } = {}) {
     mood: src.mood ?? '', vision: src.vision ?? '', headache: src.headache ?? '',
     glucose: src.glucose ?? '', mass: src.mass ?? '', sbp: '', dbp: '',
   };
-  if (localEntry(personId, day)) { form.sbp = src.sbp ?? ''; form.dbp = src.dbp ?? ''; }
+  // Blood pressure is prefilled only from what was typed here, never from the suit record.
+  const typed = localEntry(personId, day) || {};
+  form.sbp = typed.sbp ?? ''; form.dbp = typed.dbp ?? '';
 
   const errs = {};
   const errBox = (key) => { errs[key] = h('div', { class: 'ci-err', role: 'alert' }); return errs[key]; };
@@ -65,7 +67,9 @@ export default function render(root, { go } = {}) {
 
   const input = (key, label, ph) => h('input', {
     class: 'ci-input', type: 'number', inputmode: 'decimal', step: 'any', placeholder: ph, 'aria-label': label,
-    value: form[key] === '' ? null : String(form[key]), oninput: (e) => { form[key] = e.target.value; },
+    value: form[key] === '' ? null : String(form[key]),
+    // A number field reports letters as an empty value; keep them as invalid text so validation rejects them.
+    oninput: (e) => { form[key] = e.target.validity?.badInput ? 'not a number' : e.target.value; },
   });
   const field = (f, body, errKeys) => h('section', { class: 'ci-field' }, [
     h('div', { class: 'ci-fhead' }, [h('h3', { class: 'ci-flabel', text: f.label }), f.note ? h('span', { class: 'ci-note', text: f.note }) : null]),
@@ -75,8 +79,9 @@ export default function render(root, { go } = {}) {
 
   const status = h('div', { class: 'ci-status' });
   if (savedKey === `${personId}:${day}`) {
+    const { v } = verdictFor(personId, day);
     status.append(
-      h('div', { class: 'ci-saved', role: 'status', text: 'Saved · streak +1' }),
+      h('div', { class: `ci-saved ci-res-${v.status}`, role: 'status', text: v.status === 'green' ? 'Saved · all clear · streak +1' : `Saved · ${v.status === 'red' ? 'RED' : 'Watch'}: ${v.headline}` }),
       h('button', { type: 'button', class: 'ci-btn ci-ghost', onclick: () => go && go('today'), text: 'See my monitor' }),
     );
   }
@@ -85,7 +90,9 @@ export default function render(root, { go } = {}) {
     const r = validateCheckin(form);
     for (const k of Object.keys(errs)) errs[k].textContent = '';
     if (!r.ok) {
-      for (const [k, m] of Object.entries(r.errors)) {
+      const order = ['mood', 'vision', 'headache', 'glucose', 'mass', 'sbp', 'dbp'];
+      for (const k of order.filter((x) => r.errors[x])) {
+        const m = form[k] === 'not a number' ? `${k === 'sbp' ? 'Systolic' : k === 'dbp' ? 'Diastolic' : 'Value'}: numbers only` : r.errors[k];
         const key = k === 'vision' || k === 'headache' ? 'eyes' : k === 'sbp' || k === 'dbp' ? 'bp' : k;
         if (errs[key] && !errs[key].textContent) errs[key].textContent = m;
       }
@@ -97,7 +104,7 @@ export default function render(root, { go } = {}) {
   };
 
   root.replaceChildren(h('div', { class: 'ci' }, [
-    h('div', { class: 'ci-head' }, [h('h2', { class: 'ci-title', text: `Check-in · Day ${day}` }), h('span', { class: 'ci-pill', text: '< 1 min' })]),
+    h('div', { class: 'ci-head' }, [h('h2', { class: 'ci-title', text: `Check-in · ${person().name} · Day ${day}` }), h('span', { class: 'ci-pill', text: '< 1 min' })]),
     h('div', { class: 'ci-auto' }, [
       h('div', { class: 'ci-auto-chips' }, AUTO.map((a) => h('span', { class: 'ci-chip', text: `${a} · auto ✓` }))),
       h('div', { class: 'ci-auto-note', text: 'From the suit — nothing to do' }),
@@ -107,8 +114,8 @@ export default function render(root, { go } = {}) {
       h('div', { class: 'ci-row' }, [h('span', { class: 'ci-rl', text: 'Vision changed' }), h('div', { class: 'ci-picks' }, visBtns)]),
       h('div', { class: 'ci-row' }, [h('span', { class: 'ci-rl', text: 'Headache 0-3' }), h('div', { class: 'ci-picks' }, headBtns)]),
     ]), ['eyes']),
-    field(fGlu, h('label', { class: 'ci-num' }, [input('glucose', 'Glucose mg/dL', '88'), h('span', { class: 'ci-unit', text: fGlu.unit })]), ['glucose']),
-    field(fMass, h('label', { class: 'ci-num' }, [input('mass', 'Body mass kg', '71.2'), h('span', { class: 'ci-unit', text: fMass.unit })]), ['mass']),
+    field(fGlu, h('label', { class: 'ci-num' }, [input('glucose', 'Glucose mg/dL', 'mg/dL'), h('span', { class: 'ci-unit', text: fGlu.unit })]), ['glucose']),
+    field(fMass, h('label', { class: 'ci-num' }, [input('mass', 'Body mass kg', 'kg'), h('span', { class: 'ci-unit', text: fMass.unit })]), ['mass']),
     field(fBp, h('div', { class: 'ci-num' }, [input('sbp', 'Systolic', 'sys'), h('span', { class: 'ci-unit', text: '/' }), input('dbp', 'Diastolic', 'dia'), h('span', { class: 'ci-unit', text: 'mmHg' })]), ['bp']),
     h('button', { type: 'button', class: 'ci-btn', onclick: save, text: 'Save' }),
     status,

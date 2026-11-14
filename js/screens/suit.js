@@ -4,6 +4,7 @@ import { createStream, detectAlerts } from '../sensor/stream.js';
 import { RULES } from '../data/rules.js';
 
 const WINDOW = 40;
+const CMP = { gte: (a, b) => a >= b, lte: (a, b) => a <= b, gt: (a, b) => a > b, lt: (a, b) => a < b };
 const LABEL = { spo2: 'SpO2', hr: 'Pulse', rr: 'Breathing', temp: 'Temperature' };
 // Daily signals (blood pressure) are judged on the day summary; the live stream alerts on acute ones.
 const ACUTE = RULES.filter((r) => ['spo2', 'hr', 'rr', 'temp'].includes(r.signal));
@@ -32,16 +33,20 @@ export function renderSuit(container, { record, seed = 1, onAlert } = {}) {
     btn,
   );
 
-  let stream, samples, seen, runId = 0;
+  let stream, samples, seen, active = null, runId = 0;
   const start = (event) => {
     stream = createStream(record, { seed, event });
     samples = []; seen = new Set();
     banner.hidden = true; banner.textContent = '';
     banner.className = 'suit-alert';
+    if (active && typeof onAlert === 'function') onAlert(null);
+    active = null;
     for (const k of Object.keys(lines)) lines[k] = renderLive(live[k], { label: LABEL[k] === 'SpO2' ? 'SpO2' : LABEL[k], unit: k === 'hr' ? 'bpm' : k === 'rr' ? '/min' : '%', color: k === 'hr' ? 'var(--red)' : k === 'rr' ? 'var(--blue)' : 'var(--green)' });
     runId++;
   };
   start(null);
+  // New mission day: keep the lines running, only move the stream to the new day's values.
+  container._suitSetRecord = (rec) => { record = rec; stream = createStream(record, { seed: seed + samples.length }); active = null; banner.hidden = true; banner.textContent = ''; };
   btn.addEventListener('click', () => start({ type: 'spo2-drop', at: 8, depth: 7, length: 14 }));
 
   const tick = () => {
@@ -50,13 +55,24 @@ export function renderSuit(container, { record, seed = 1, onAlert } = {}) {
     samples.push(s);
     if (samples.length > WINDOW) samples.shift();
     for (const k of Object.keys(lines)) lines[k].push(s[k]);
-    for (const a of detectAlerts(samples, ACUTE)) {
+    // The alert stays only while the value is still out of range in the last 3 samples.
+    if (active) {
+      const r = ACUTE.find((x) => x.id === active.ruleId);
+      const still = samples.slice(-3).some((x) => CMP[r.op](x[r.signal], r.value));
+      if (!still) {
+        active = null;
+        banner.hidden = true; banner.textContent = '';
+        if (typeof onAlert === 'function') onAlert(null);
+      }
+    }
+    for (const a of detectAlerts(samples.slice(-6), ACUTE)) {
       const id = `${runId}:${a.ruleId}`;
       if (seen.has(id)) continue;
       seen.add(id);
       banner.className = `suit-alert suit-${a.level}`;
       banner.textContent = `${LABEL[a.signal] || a.signal} ${Math.round(a.value)}${a.signal === 'spo2' ? '%' : ''} · auto alert · no input needed`;
       banner.hidden = false;
+      active = a;
       if (typeof onAlert === 'function') onAlert(a);
     }
   };

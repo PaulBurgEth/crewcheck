@@ -234,7 +234,7 @@ export default function render(root, { go } = {}) {
   const ev = verdictFor(state.personId, day).ev;
 
   const canvas = h('canvas', { role: 'img', 'aria-label': `${sig.label} trend with forecast` });
-  const pick = (id) => { chosen = id; render(root, { go }); };
+  const pick = (id) => { chosen = id; root.replaceChildren(); render(root, { go }); };
   const status = (key) => ev.signals[key]?.status || 'grey';
 
   const chips = h('div', { class: 'tr-chips', role: 'tablist' }, SIGNALS.map((s) => h('button', {

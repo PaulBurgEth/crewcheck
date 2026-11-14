@@ -1,12 +1,12 @@
 import { h, confBadge, STATUS_WORD } from '../ui.js';
 import { EXPLAIN, SIGNAL_LABEL } from '../data/explain.js';
-import { SYSTEMS, ACTIONS } from '../data/rules.js';
+import { SYSTEMS, ACTIONS, ACTION_SOURCE } from '../data/rules.js';
 import { SOURCES, KIND_LABEL } from '../data/sources.js';
 import { confidenceOf } from '../engine/escalation.js';
 
 const srcTag = (id) => {
   const s = SOURCES[id];
-  return h('span', { class: `src src-${s.kind}`, title: s.title }, s.short);
+  return s.url ? h('a', { class: `src src-${s.kind}`, title: s.title, href: s.url, target: '_blank', rel: 'noopener' }, s.short) : h('span', { class: `src src-${s.kind}`, title: s.title }, s.short);
 };
 
 const fmt = (v) => (v == null ? '–' : Number.isInteger(v) ? String(v) : v.toFixed(1));
@@ -34,7 +34,7 @@ export function renderWhy(container, { systemId, ev, onClose }) {
 
   const actions = [...new Set(st.fired.map((f) => f.action))];
   const doList = actions.length
-    ? actions.map((a) => h('div', { class: 'why-do' }, [confBadge(confidenceOf(st.fired.find((f) => f.action === a).source)), h('span', { text: ACTIONS[a] })]))
+    ? actions.map((a) => h('div', { class: 'why-do' }, [confBadge(confidenceOf(ACTION_SOURCE[a] || st.fired.find((f) => f.action === a).source)), h('span', { text: ACTIONS[a] })]))
     : [h('span', { class: 'muted', text: 'Keep the routine' })];
 
   const panel = h('aside', { class: `why why-${st.status}`, role: 'dialog', 'aria-label': `Why: ${sys.label}` }, [
