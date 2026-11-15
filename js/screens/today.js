@@ -213,19 +213,21 @@ export function renderToday(root, hooks = {}) {
   if (story.on) { renderNarrator(shell.card); placeNarrator(shell.root, shell.card); } else { shell.card.remove(); shell.root.querySelectorAll('.sn-mark').forEach((n) => n.remove()); }
   const step = story.on ? currentStep().id : null;
   // New story step: bring its first highlighted block into view (keep the story bar visible).
-  if (step && step !== lastStep) setTimeout(() => {
+  const bringIntoView = () => {
     if (story.on) placeNarrator(shell.root, shell.card);
     const spots = [...shell.root.querySelectorAll('.spot'), ...(story.on ? [shell.card] : [])];
     if (!spots.length) return;
     const top = Math.min(...spots.map((e) => e.getBoundingClientRect().top));
     const bottom = Math.max(...spots.map((e) => e.getBoundingClientRect().bottom));
-    const cover = (shell.bar.getBoundingClientRect().bottom || 0) + 12;
+    const bs = getComputedStyle(shell.bar);
+    const cover = (bs.position === 'sticky' ? (parseFloat(bs.top) || 0) + shell.bar.offsetHeight : 0) + 12;
     // Smallest scroll that shows all highlighted blocks; if they do not fit, align their top under the bar.
     let dy = 0;
     if (bottom > innerHeight) dy = Math.min(bottom - innerHeight + 16, top - cover);
     else if (top < cover) dy = top - cover;
     if (Math.abs(dy) > 4) window.scrollTo({ top: Math.max(0, scrollY + dy), behavior: 'smooth' });
-  }, 30);
+  };
+  if (step && step !== lastStep) { setTimeout(bringIntoView, 30); setTimeout(bringIntoView, 450); }
   lastStep = step;
 
   // Live advice only on demand (bubble open, a question chosen, the note open) and only once the day
