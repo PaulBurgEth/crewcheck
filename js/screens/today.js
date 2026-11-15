@@ -21,7 +21,7 @@ import { attachAdvice } from '../engine/advisor.js';
 import { evaluate } from '../engine/evaluate.js';
 import { escalate } from '../engine/escalation.js';
 import { getLiveAdvice, requestLiveAdvice, PROXY_URL, livePayload, liveTried } from './advisor-live.js';
-import { story, renderStoryBar, decorate, currentStep } from './story.js';
+import { story, renderStoryBar, decorate, currentStep, renderNarrator, placeNarrator } from './story.js';
 import { renderCase, renderAgentLog, noteIsOpen } from './case-card.js';
 
 const flagged = (ev) => Object.entries(ev.systems).filter(([, s]) => s.status === 'yellow' || s.status === 'red').map(([k]) => k).sort().join(',');
@@ -53,6 +53,7 @@ function buildShell(p) {
     personId: p.id,
     root: h('div', { class: 'today v2' }),
     bar: h('div', { class: 'story-bar' }),
+    card: h('aside', { class: 'sn', 'aria-live': 'polite' }),
     head: h('div', { class: 'today-head' }),
     tl: h('div', { class: 'today-timeline', 'data-spot': 'timeline' }),
     scene: h('section', { class: 'scene-box', 'data-spot': 'scene' }),
@@ -205,10 +206,12 @@ export function renderToday(root, hooks = {}) {
   }
 
   decorate(shell.root);
+  if (story.on) { renderNarrator(shell.card); placeNarrator(shell.root, shell.card); } else shell.card.remove();
   const step = story.on ? currentStep().id : null;
   // New story step: bring its first highlighted block into view (keep the story bar visible).
   if (step && step !== lastStep) setTimeout(() => {
-    const spots = [...shell.root.querySelectorAll('.spot')];
+    if (story.on) placeNarrator(shell.root, shell.card);
+    const spots = [...shell.root.querySelectorAll('.spot'), ...(story.on ? [shell.card] : [])];
     if (!spots.length) return;
     const top = Math.min(...spots.map((e) => e.getBoundingClientRect().top));
     const bottom = Math.max(...spots.map((e) => e.getBoundingClientRect().bottom));
@@ -292,3 +295,6 @@ function followUpCard(fu, records) {
     ]))),
   ]);
 }
+
+// Keep the narrator card next to its block when the window changes size.
+if (typeof window !== 'undefined') window.addEventListener('resize', () => { if (story.on && shell?.root.isConnected) placeNarrator(shell.root, shell.card); });
