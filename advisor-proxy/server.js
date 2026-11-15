@@ -5,6 +5,15 @@ import { MISSIONS } from '../js/data/missions.js';
 
 const MAX_BODY = 4096;
 const CACHE_MAX = 500;
+const ADVICE_SCHEMA = {
+  type: 'object',
+  properties: {
+    text: { type: 'string', maxLength: 300 },
+    points: { type: 'array', maxItems: 3, items: { type: 'string', maxLength: 100 } },
+  },
+  required: ['text', 'points'],
+  additionalProperties: false,
+};
 const SYSTEM_PROMPT = [
   'You are the explanation layer of an onboard crew health monitor on a space mission. Rules already decided the status and who acts; never change, question or soften them, and do not restate the status or tier.',
   'Input is JSON: fired rules with signal, kind (abs = value, delta = points above the usual value, pct = percent change), measured, threshold, norm (the person\'s usual value), days (consecutive days the rule has fired), since (mission day it started), unit; optional linked = body systems that moved together; done = steps the onboard agent already took (remeasure, reminders, report, page = crew medic paged); checked = result of the countermeasure re-check per signal; question.',
@@ -16,7 +25,7 @@ const SYSTEM_PROMPT = [
 ].join(' ');
 
 const KEYS = ['mission', 'day', 'tier', 'status', 'fired'];
-// Optional: one of three fixed questions from the app's buttons. Never free text.
+// Optional: one of the fixed advisor request types. Never free text.
 export const QUESTIONS = ['why-now', 'wait', 'medic', 'handover'];
 const OPTIONAL = ['question', 'linked', 'done', 'checked'];
 const FIRED_OPTIONAL = ['kind', 'norm', 'days', 'unit', 'since'];
@@ -66,14 +75,14 @@ export function parseModelOutput(raw) {
   if (m) s = m[1];
   let o;
   try { o = JSON.parse(s); } catch { return null; }
-  if (!isObj(o) || typeof o.text !== 'string' || o.text.length > 700) return null;
+  if (!isObj(o) || typeof o.text !== 'string' || o.text.length > 300) return null;
   if (!Array.isArray(o.points) || o.points.length > 3) return null;
-  if (!o.points.every((p) => typeof p === 'string' && p.length <= 200)) return null;
+  if (!o.points.every((p) => typeof p === 'string' && p.length <= 100)) return null;
   return { text: o.text, points: o.points };
 }
 
 export function makeCallModel({ apiKey, model }) {
-  return async (payload) => {
+  const callModel = async (payload) => {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
@@ -93,9 +102,48 @@ export function makeCallModel({ apiKey, model }) {
     // Read the text block, not the first block: a thinking block may come first.
     return (data?.content || []).find((c) => c?.type === 'text')?.text;
   };
+  callModel.origin = 'cloud';
+  return callModel;
 }
 
-export function createHandler({ callModel, now = Date.now, limits = {}, allowedOrigin }) {
+export function ollamaEndpoint(baseUrl) {
+  const url = new URL(baseUrl);
+  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) throw new Error('invalid OLLAMA_BASE_URL');
+  const basePath = url.pathname.replace(/\/+$/, '');
+  url.pathname = `${basePath.endsWith('/api') ? basePath : `${basePath}/api`}/chat`;
+  return url.toString();
+}
+
+// Ollama stays behind this adapter: the browser never talks to the model runtime directly.
+// The adapter keeps the same structured input and validated output contract as the cloud path.
+export function makeOllamaCallModel({ baseUrl = 'http://127.0.0.1:11434', model = 'llama3.2:3b', timeoutMs = 18000, fetchFn = fetch }) {
+  const endpoint = ollamaEndpoint(baseUrl);
+  const callModel = async (payload) => {
+    const res = await fetchFn(endpoint, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        stream: false,
+        format: ADVICE_SCHEMA,
+        options: { temperature: 0, num_predict: 256 },
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: JSON.stringify(payload) },
+        ],
+      }),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    if (!res.ok) throw new Error(`ollama ${res.status}`);
+    const data = await res.json();
+    if (data?.done !== true || typeof data?.message?.content !== 'string') throw new Error('bad ollama response');
+    return data.message.content;
+  };
+  callModel.origin = 'onboard';
+  return callModel;
+}
+
+export function createHandler({ callModel, now = Date.now, limits = {}, allowedOrigin, responseOrigin = callModel?.origin || 'live' }) {
   const dailyCap = limits.dailyCap ?? 300;
   const perIp = limits.perIpPerMin ?? 6;
   const cache = new Map();
@@ -164,7 +212,7 @@ export function createHandler({ callModel, now = Date.now, limits = {}, allowedO
 
       const key = JSON.stringify(payload);
       const cached = cache.get(key);
-      if (cached) return send(res, 200, { ...cached, origin: 'live' }, true);
+      if (cached) return send(res, 200, { ...cached, origin: responseOrigin }, true);
 
       const today = Math.floor(t / 86400000);
       if (today !== day) { day = today; used = 0; }
@@ -176,7 +224,7 @@ export function createHandler({ callModel, now = Date.now, limits = {}, allowedO
       if (!out) return send(res, 502, { error: 'bad model output' }, true);
       if (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value);
       cache.set(key, out);
-      return send(res, 200, { ...out, origin: 'live' }, true);
+      return send(res, 200, { ...out, origin: responseOrigin }, true);
     } catch {
       if (!res.headersSent) send(res, 500, { error: 'server error' });
     }
@@ -184,16 +232,31 @@ export function createHandler({ callModel, now = Date.now, limits = {}, allowedO
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    console.error('ANTHROPIC_API_KEY is required');
+  const provider = (process.env.ADVISOR_PROVIDER || 'anthropic').toLowerCase();
+  let callModel;
+  if (provider === 'ollama') {
+    callModel = makeOllamaCallModel({
+      baseUrl: process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434',
+      model: process.env.OLLAMA_MODEL || process.env.MODEL || 'llama3.2:3b',
+      timeoutMs: Number(process.env.OLLAMA_TIMEOUT_MS) || 18000,
+    });
+  } else if (provider === 'anthropic') {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      console.error('ANTHROPIC_API_KEY is required when ADVISOR_PROVIDER=anthropic');
+      process.exit(1);
+    }
+    callModel = makeCallModel({ apiKey, model: process.env.ANTHROPIC_MODEL || process.env.MODEL || 'claude-haiku-5-5' });
+  } else {
+    console.error('ADVISOR_PROVIDER must be anthropic or ollama');
     process.exit(1);
   }
   const handler = createHandler({
-    callModel: makeCallModel({ apiKey, model: process.env.MODEL || 'claude-haiku-5-5' }),
+    callModel,
     limits: { dailyCap: Number(process.env.DAILY_CAP) || 300, perIpPerMin: Number(process.env.PER_IP_PER_MIN) || 6 },
     allowedOrigin: process.env.ALLOWED_ORIGIN || '',
   });
   const port = Number(process.env.PORT) || 8790;
-  http.createServer(handler).listen(port, '127.0.0.1', () => console.log(`advisor-proxy listening on 127.0.0.1:${port}`));
+  const host = process.env.HOST || '127.0.0.1';
+  http.createServer(handler).listen(port, host, () => console.log(`advisor-proxy (${provider}) listening on ${host}:${port}`));
 }

@@ -189,7 +189,7 @@ export function renderToday(root, hooks = {}) {
   const cmDay = eventsFor(p.id).find((e) => e.id === 'countermeasure')?.day ?? null;
   actKids.push(renderCase({
     person: p, records, strip, v, mission: m, day: state.day, countermeasureDay: cmDay,
-    live: getLiveAdvice(p.id, state.day, 'handover')?.text || null,
+    live: getLiveAdvice(p.id, state.day, 'handover'),
     reveal: story.on && currentStep().id === 'act',
     onChange: () => set({}), onLog: () => { drawer = true; set({}); },
   }));
@@ -261,7 +261,7 @@ function advisorBubble(p, ev, v, m, records) {
   const adv = findAdvice(p.id, state.day, flagged(ev), (d) => flagged(evaluate(records, d)));
   const shown = attachAdvice(v, getLiveAdvice(p.id, state.day) || adv || {});
   const open = !!state.advisorOpen;
-  const live = shown.advice.origin === 'live';
+  const generated = shown.advice.origin === 'live' || shown.advice.origin === 'onboard';
   const head = h('button', { type: 'button', class: 'adv-chip', 'aria-expanded': String(open), onclick: () => set({ advisorOpen: !open }) },
     [icon('spark'), h('span', { class: 'adv-t', text: 'AI explains' }), h('span', { class: 'adv-only', text: 'advises only' })]);
   const box = h('section', { class: `adv-bubble${open ? ' open' : ''}`, 'data-spot': 'advisor' }, [head]);
@@ -280,7 +280,7 @@ function advisorBubble(p, ev, v, m, records) {
       onclick: () => { advQ = advQ === q.id ? null : q.id; set({}); }, text: q.label,
     }))) : null,
     answer ? h('div', { class: 'adv-ans', text: answer }) : null,
-    h('div', { class: 'adv-origin', text: live ? 'AI-generated (Claude), live' : PRECOMPUTED_LABEL }),
+    h('div', { class: 'adv-origin', text: shown.advice.origin === 'onboard' ? 'AI-generated onboard · rules decided' : generated ? 'AI-generated (Claude), live · rules decided' : PRECOMPUTED_LABEL }),
   ].filter(Boolean));
   return box;
 }

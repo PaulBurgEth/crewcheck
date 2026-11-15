@@ -109,14 +109,14 @@ Open http://localhost:8000. Tests (Node 20+): `node --test`
 - `js/demo/`: synthetic crew generator and data passport
 - `js/sensor/`: simulated suit stream and alerts
 - `js/viz/`: hand-written SVG components (body, distance scene, decision nodes, timeline, rings, live lines)
-- `advisor-proxy/`: small proxy for the live advisor; the demo works without it
+- `advisor-proxy/`: provider-neutral adapter for optional onboard Ollama or cloud advice; the demo works without it
 - `docs/`: data contract, design decisions, known issues
 - `tests/`: `node --test` suites
 
 ## Use of AI
 - **Building it.** Code, tests and the data generator were written with Claude Code (Anthropic Claude) and reviewed by the team. Log: `AI_USE.md`.
-- **In the product.** The AI advisor is Claude. It receives only structured data (fired rules and numbers), never free text, answers only three fixed questions, and cannot change status or escalation.
-- **Live and offline.** When online, the advisor answers live through a small proxy (`advisor-proxy/`, rate-limited, own key on the server, never in the browser). Offline, or if the proxy is down, the app shows precomputed answers labelled "AI-generated (Claude), precomputed" (`js/data/advisor-precomputed.js`). In this demo the advisor runs on a cloud model; on a mission it would run on board.
+- **In the product.** The optional AI advisor receives only structured data (fired rules and numbers), never free text, answers only fixed questions, and cannot change status or escalation. The adapter supports an onboard Ollama model or the existing Claude cloud path.
+- **Live and offline.** The adapter is rate-limited and keeps model access out of the browser. If it is unavailable or returns invalid output, the app keeps the precomputed answers labelled "AI-generated (Claude), precomputed" (`js/data/advisor-precomputed.js`). See [`docs/LOCAL_AI.md`](docs/LOCAL_AI.md) for the Ollama + Llama 3.2 3B MVP setup and offline acceptance check.
 - **No AI-generated images.** The body figure and icons are hand-written SVG. No agency logos.
 
 ## Licence

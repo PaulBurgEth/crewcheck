@@ -44,10 +44,10 @@ export function renderCase({ person, records, strip, v, mission, day, countermea
         ok ? h('span', { class: 'cs-appr', text: `Approved d${ok.day}` }) : h('button', { type: 'button', class: 'cs-btn', onclick: () => { approved.set(key(a), { day, text: a.text }); onChange(); } }, 'Approve')]);
     })),
   );
-  const note = live || findHandover(person.id, day, c.openDay);
+  const note = live?.text || findHandover(person.id, day, c.openDay);
   if (note) {
     box.append(h('button', { type: 'button', class: 'cs-note-btn', 'aria-expanded': String(noteOpen), onclick: () => { noteOpen = !noteOpen; onChange(); } }, [icon('form'), h('span', { text: 'Note' })]));
-    if (noteOpen) box.append(h('div', { class: 'cs-note' }, [h('p', { text: note }), h('div', { class: 'adv-origin', text: live ? 'AI-written (Claude), live · rules decided' : 'AI-written (Claude), precomputed · rules decided' })]));
+    if (noteOpen) box.append(h('div', { class: 'cs-note' }, [h('p', { text: note }), h('div', { class: 'adv-origin', text: live?.origin === 'onboard' ? 'AI-written onboard · rules decided' : live ? 'AI-written (Claude), live · rules decided' : 'AI-written (Claude), precomputed · rules decided' })]));
   }
   return box;
 }

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { createHandler, validatePayload } from '../advisor-proxy/server.js';
+import { createHandler, makeOllamaCallModel, ollamaEndpoint, validatePayload } from '../advisor-proxy/server.js';
 import { RULES } from '../js/data/rules.js';
 
 const ORIGIN = 'https://example.github.io';
@@ -30,6 +30,46 @@ test('valid payload returns 200 with text', async () => {
   assert.equal(j.text, 'Pressure is above the line.');
   assert.deepEqual(j.points, ['Re-measure']);
   assert.equal(r.headers.get('access-control-allow-origin'), ORIGIN);
+  server.close();
+});
+
+test('Ollama adapter sends only the structured payload and requests schema output', async () => {
+  let request;
+  const callModel = makeOllamaCallModel({
+    baseUrl: 'http://127.0.0.1:11434',
+    model: 'llama3.2:3b',
+    fetchFn: async (url, options) => {
+      request = { url, options };
+      return new Response(JSON.stringify({ done: true, message: { content: '{"text":"Local explanation.","points":[]}' } }));
+    },
+  });
+  assert.equal(callModel.origin, 'onboard');
+  assert.equal(await callModel(good()), '{"text":"Local explanation.","points":[]}');
+  assert.equal(request.url, 'http://127.0.0.1:11434/api/chat');
+  const body = JSON.parse(request.options.body);
+  assert.equal(body.model, 'llama3.2:3b');
+  assert.equal(body.stream, false);
+  assert.equal(body.options.temperature, 0);
+  assert.equal(body.format.additionalProperties, false);
+  assert.deepEqual(JSON.parse(body.messages[1].content), good());
+  assert.match(body.messages[0].content, /never change, question or soften/);
+});
+
+test('Ollama URL is fixed to the chat endpoint and rejects unsafe forms', () => {
+  assert.equal(ollamaEndpoint('http://edge-box:11434/ollama/'), 'http://edge-box:11434/ollama/api/chat');
+  assert.equal(ollamaEndpoint('http://edge-box:11434/api'), 'http://edge-box:11434/api/chat');
+  assert.throws(() => ollamaEndpoint('file:///tmp/ollama'));
+  assert.throws(() => ollamaEndpoint('http://user:pass@edge-box:11434'));
+  assert.throws(() => ollamaEndpoint('http://edge-box:11434?target=elsewhere'));
+});
+
+test('onboard responses are labelled without changing the advice contract', async () => {
+  const callModel = async () => '{"text":"Onboard explanation.","points":[]}';
+  callModel.origin = 'onboard';
+  const { server, post } = await start({ callModel });
+  const r = await post(good());
+  assert.equal(r.status, 200);
+  assert.deepEqual(await r.json(), { text: 'Onboard explanation.', points: [], origin: 'onboard' });
   server.close();
 });
 
@@ -91,6 +131,22 @@ test('non-JSON model output is 502', async () => {
   const r = await post(good());
   assert.equal(r.status, 502);
   assert.ok((await r.json()).error);
+  server.close();
+});
+
+test('unavailable local model fails closed so the UI can keep precomputed advice', async () => {
+  const callModel = async () => { throw new Error('Ollama unavailable'); };
+  callModel.origin = 'onboard';
+  const { server, post } = await start({ callModel });
+  const r = await post(good());
+  assert.equal(r.status, 502);
+  assert.deepEqual(await r.json(), { error: 'bad model output' });
+  server.close();
+});
+
+test('model output limits are enforced before advice reaches the UI', async () => {
+  const { server, post } = await start({ callModel: async () => JSON.stringify({ text: 'x'.repeat(301), points: [] }) });
+  assert.equal((await post(good())).status, 502);
   server.close();
 });
 
