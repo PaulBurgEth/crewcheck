@@ -39,3 +39,30 @@
   .sn-points{gap:6px}.sn-pt{font-size:13px}.sn-pt-i{width:46px;height:46px}
   .sn-foot{flex-wrap:wrap}
 }
+
+/* Differences in the design: mission strip, who-acts headline, ring "decides", near/far plates */
+.mstrip{flex-basis:100%;order:10;display:flex;align-items:center;gap:12px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.35);border-radius:12px;padding:5px 14px;color:var(--text);font-size:14px;text-align:left;cursor:pointer}
+.mstrip[data-far=false]{background:rgba(96,165,250,.08);border-color:rgba(96,165,250,.35)}
+.mstrip .scn-glyph{width:28px;height:28px;display:block}
+.ms-m{font-weight:800}
+.ms-d{color:var(--muted);font-variant-numeric:tabular-nums}
+.ms-who{margin-left:auto;font-weight:800;font-size:17px;color:var(--yellow);text-transform:uppercase;letter-spacing:.04em}
+.mstrip[data-far=false] .ms-who{color:var(--blue)}
+@media (max-width:760px){.mstrip{gap:8px;padding:5px 10px;font-size:13px}.ms-who{font-size:14px}.mstrip .scn-glyph{width:22px;height:22px}}
+.vd-subline{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:15px;font-weight:600;margin-top:-6px}
+.vd-subline .ic{width:16px;height:16px}
+.vd-what{font-size:13px;font-weight:700;margin-top:6px;white-space:nowrap}
+.scn-band{position:relative}
+.scn-ring{position:absolute;width:70px;height:70px;margin:-35px 0 0 -35px;border-radius:50%;border:3px solid var(--yellow);box-shadow:0 0 20px rgba(251,191,36,.55);pointer-events:none;transition:left .8s cubic-bezier(.4,0,.2,1),top .8s,border-color .4s,box-shadow .4s;z-index:2}
+.scn-ring[data-who=earth]{border-color:var(--blue);box-shadow:0 0 20px rgba(96,165,250,.6)}
+.scn-ring[hidden]{display:none}
+.scn-ring-t{position:absolute;left:50%;top:-20px;transform:translateX(-50%);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--yellow);background:var(--panel);padding:0 5px;border-radius:5px}
+.scn-ring[data-who=earth] .scn-ring-t{color:var(--blue)}
+.scn-plates{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.scn-plate{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:7px 12px;font-size:14px;font-weight:700;color:var(--muted);opacity:.6;transition:all .4s}
+.scn-plate .ic{width:18px;height:18px}
+.scn-plate.on{opacity:1;color:var(--text)}
+.scn-plate[data-plate=near].on{border-color:var(--blue);background:rgba(96,165,250,.14)}
+.scn-plate[data-plate=far].on{border-color:var(--yellow);background:rgba(251,191,36,.14)}
+@media (max-width:760px){.scn-ring-t{display:none}.scn-ring{width:54px;height:54px;margin:-27px 0 0 -27px}.scn-plate{font-size:12px;padding:6px 8px}}
+@media (prefers-reduced-motion:reduce){.scn-ring,.scn-plate{transition:none}}
