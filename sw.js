@@ -1,10 +1,11 @@
 // Offline support: the whole app is cached so it opens again without any network.
 // Bump VERSION on every release so judges never get a stale copy.
-const VERSION = 'crewcheck-v20';
+const VERSION = 'crewcheck-v21';
 const FILES = [
   './',
   './css/app.css',
   './css/blocks.css',
+  './css/cabin.css',
   './css/checkin.css',
   './css/earth.css',
   './css/sources.css',
@@ -17,13 +18,16 @@ const FILES = [
   './js/data/advisor-precomputed.js',
   './js/data/explain.js',
   './js/data/missions.js',
+  './js/data/cabin.js',
   './js/data/rules.js',
   './js/data/sources.js',
+  './js/demo/cabin.js',
   './js/demo/generator.js',
   './js/demo/passport.js',
   './js/demo/rng.js',
   './js/engine/advisor.js',
   './js/engine/agent.js',
+  './js/engine/cabin.js',
   './js/engine/downlink.js',
   './js/engine/escalation.js',
   './js/engine/evaluate.js',

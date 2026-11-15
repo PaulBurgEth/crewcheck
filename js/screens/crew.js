@@ -1,5 +1,5 @@
-import { h } from '../ui.js';
-import { state, mission, verdictFor, recordsOf, localEntry, statusStrip } from '../state.js';
+import { h, confBadge } from '../ui.js';
+import { state, mission, verdictFor, recordsOf, localEntry, statusStrip, cabin, cabinCase } from '../state.js';
 import { evaluate } from '../engine/evaluate.js';
 import { el } from '../viz/svg.js';
 import { icon } from '../viz/icons.js';
@@ -7,6 +7,9 @@ import { personIndex, crewIndex, indexColor } from '../engine/score.js';
 import { renderRings } from '../viz/rings.js';
 import { renderPatch } from '../viz/badges.js';
 import { SYSTEMS } from '../data/rules.js';
+import { CABIN_PARAMS } from '../data/cabin.js';
+import { cabinOut } from '../engine/cabin.js';
+import { MISSION_EVENTS } from '../demo/generator.js';
 
 const TIER_LABEL = { none: 'All clear', self: 'Handles it alone', crew: 'Crew medic', earth: 'Flight surgeon' };
 // The crew medic is a crew member; when the medic is the patient, the commander backs up (demo assumption).
@@ -55,6 +58,63 @@ function indexStrip(day) {
   ]);
 }
 
+// Mission ribbon marks: cabin events over the crew index strip.
+function cabinMarks() {
+  return h('div', { class: 'cab-marks', 'aria-hidden': 'true' }, MISSION_EVENTS.filter((e) => e.id.startsWith('cabin')).map((e) =>
+    h('span', { class: 'cab-mark', style: `left:${((e.day - 1) / 179) * 100}%`, title: `Day ${e.day}: ${e.label}` }, [icon('cabin')])));
+}
+
+// Cabin strip: four parameters of the day; a shared cause links the parameter to the affected crew.
+function cabinStrip(day, cc) {
+  const row = cabin[day - 1];
+  const out = new Set(cabinOut(row).map((p) => p.id));
+  const icons = h('div', { class: 'cab-icons' }, CABIN_PARAMS.map((p) => h('span', {
+    class: `cab-ic${out.has(p.id) ? ' warn' : ''}`, 'data-param': p.id, title: `${p.label}: ${row[p.id]} ${p.unit} · demo limit on Sources`,
+  }, [icon(p.icon), h('b', { text: row[p.id].toFixed(p.d) }), h('span', { class: 'cab-u', text: p.unit }), h('span', { class: 'cab-l', text: p.label })])));
+  const kids = [h('div', { class: 'cab-h' }, [icon('cabin'), h('span', { text: 'Cabin' })]), icons];
+  if (cc) {
+    kids.push(h('div', { class: 'cab-case', role: 'status' }, [
+      h('div', { class: 'cab-cause' }, [h('span', { text: `Likely cabin cause · ${cc.who.length} crew` }), confBadge('hypothesis')]),
+      h('div', { class: 'cab-act' }, [icon('fan'), h('span', { text: cc.action })]),
+      h('div', { class: 'cab-done' }, [icon('check'), h('span', { text: 'Agent: crew alerted' })]),
+      h('div', { class: 'cab-tag', text: 'Non-clinical · no approval' }),
+    ]));
+  }
+  return h('section', { class: `cab${cc ? ' on' : ''}`, 'aria-label': `Cabin, day ${day}` }, kids);
+}
+
+// Lines from the out-of-range cabin icon to the affected tiles; redrawn on resize.
+function drawLinks(wrap, cc) {
+  const old = wrap.querySelector('.cab-links');
+  if (old) old.remove();
+  if (!cc || !wrap.isConnected) return;
+  const from = wrap.querySelector(`.cab-ic[data-param="${cc.param}"]`);
+  const tiles = cc.who.map((id) => wrap.querySelector(`.crew-tile[data-id="${id}"]`)).filter(Boolean);
+  if (!from || !tiles.length) return;
+  const W = wrap.getBoundingClientRect();
+  const f = from.getBoundingClientRect();
+  // Lines leave from the strip's lower edge under the icon, so they never cross the case text.
+  const x0 = f.left + f.width / 2 - W.left, y0 = wrap.querySelector('.cab').getBoundingClientRect().bottom - W.top;
+  const oneCol = new Set(tiles.map((t) => Math.round(t.getBoundingClientRect().left))).size === 1 && tiles.length > 1;
+  const ends = [];
+  const paths = tiles.map((t) => {
+    const r = t.getBoundingClientRect();
+    if (oneCol) {
+      // Phone: run down the left gutter, then into the tile's left edge.
+      const gx = Math.max(3, r.left - W.left - 7), ty = r.top - W.top + 28;
+      ends.push([r.left - W.left + 6, ty]);
+      return `M${x0},${y0} V${y0 + 8} H${gx} V${ty} H${r.left - W.left + 6}`;
+    }
+    const x1 = r.left + r.width / 2 - W.left, y1 = r.top - W.top + 2;
+    ends.push([x1, y1]);
+    const my = (y0 + y1) / 2;
+    return `M${x0},${y0} C${x0},${my} ${x1},${my} ${x1},${y1}`;
+  });
+  wrap.append(el('svg', { class: 'cab-links', width: W.width, height: W.height, viewBox: `0 0 ${W.width} ${W.height}`, 'aria-hidden': 'true' },
+    [...paths.map((d) => el('path', { d })), ...ends.map(([cx, cy]) => el('circle', { cx, cy, r: 3 }))]));
+}
+let onResize = null;
+
 function checkedIn(personId, day) {
   if (localEntry(personId, day)) return true;
   const r = recordsOf(personId).find((x) => x.day === day);
@@ -74,19 +134,22 @@ export default function renderCrew(root, { go }) {
   const patch = h('div', { class: 'crew-patch' });
   const head = h('div', { class: 'crew-head' }, [
     h('div', {}, [h('div', { class: 'crew-title', text: `Crew · Day ${state.day}` }), h('div', { class: 'muted', text: `${m.label} · ${m.careLabel}` })]),
-    h('div', { class: `crew-index i-${indexColor(cIdx)}`, title: 'CrewCheck Index (formula on Sources)' }, [h('span', { class: 'ci-num', text: cIdx ?? '–' }), h('span', { class: 'ci-lab', text: 'Crew index' }), indexStrip(state.day), h('span', { class: 'ci-sub' }, [h('span', { text: '100 = all normal' }), h('a', { href: '#/sources', class: 'ci-src', title: 'Formula on Sources', 'aria-label': 'Formula on Sources' }, [icon('rule')])])]),
+    h('div', { class: `crew-index i-${indexColor(cIdx)}`, title: 'CrewCheck Index (formula on Sources)' }, [h('span', { class: 'ci-num', text: cIdx ?? '–' }), h('span', { class: 'ci-lab', text: 'Crew index' }), h('div', { class: 'ci-ribbon' }, [indexStrip(state.day), cabinMarks()]), h('span', { class: 'ci-sub' }, [h('span', { text: '100 = all normal' }), h('a', { href: '#/sources', class: 'ci-src', title: 'Formula on Sources', 'aria-label': 'Formula on Sources' }, [icon('rule')])])]),
     h('div', { class: 'crew-patch-wrap' }, [patch, h('div', { class: 'ci-sub', text: doneCount === 4 ? 'Crew patch complete' : `Crew patch: ${doneCount} of 4 checked in` })]),
   ]);
   root.append(head);
   countUp(head.querySelector('.ci-num'), 'crew', cIdx);
   patch.append(renderPatch({ done: rows.map((r) => r.done), names: rows.map((r) => r.p.name), size: 96, flash: doneCount === 4 }));
 
+  const cc = cabinCase(state.day);
+  const wrap = h('div', { class: 'cab-wrap' });
+  wrap.append(cabinStrip(state.day, cc));
   const grid = h('div', { class: 'crew-grid' });
   for (const r of rows) {
     const dots = h('div', { class: 'crew-dots' }, SYSTEMS.map((s) => h('span', { class: `cd cd-${r.ev.systems[s.id].status}`, title: `${s.label}: ${r.ev.systems[s.id].status}` })));
     const tile = h('button', {
-      class: `crew-tile t-${r.v.status}`,
-      'aria-label': `${r.p.name}, ${r.v.status}, ${tierText(r.p, r.v.tier, state.crew)}. Open monitor`,
+      class: `crew-tile t-${r.v.status}${cc?.who.includes(r.p.id) ? ' cab-hit' : ''}`, 'data-id': r.p.id,
+      'aria-label': `${r.p.name}, ${r.v.status}, ${tierText(r.p, r.v.tier, state.crew)}${cc?.who.includes(r.p.id) ? ', likely cabin cause' : ''}. Open monitor`,
       onclick: () => go('today', { personId: r.p.id }),
     }, [
       h('div', { class: 'ct-ring' }),
@@ -104,5 +167,11 @@ export default function renderCrew(root, { go }) {
     countUp(tile.querySelector('.cc-ring-center'), r.p.id, r.idx);
     grid.append(tile);
   }
-  root.append(grid);
+  wrap.append(grid);
+  root.append(wrap);
+  setTimeout(() => drawLinks(wrap, cc), 0);
+  setTimeout(() => drawLinks(wrap, cc), 400);
+  if (onResize) removeEventListener('resize', onResize);
+  onResize = () => drawLinks(wrap, cc);
+  addEventListener('resize', onResize);
 }

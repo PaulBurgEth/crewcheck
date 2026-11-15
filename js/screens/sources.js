@@ -7,6 +7,7 @@ import { MISSIONS } from '../data/missions.js';
 import { PASSPORT } from '../demo/passport.js';
 import { WEIGHTS, POINTS } from '../engine/score.js';
 import { AGENT_CAPS, AGENT_NEVER, agentMay } from '../engine/agent.js';
+import { CABIN_PARAMS, CABIN_SOURCE, CABIN_LIMIT_SOURCE, limitText } from '../data/cabin.js';
 
 const OPS = { gte: '≥', lte: '≤', gt: '>', lt: '<' };
 const KIND_ORDER = ['nasa', 'agency', 'clinical', 'assumption'];
@@ -168,6 +169,15 @@ function passportSection() {
   ];
 }
 
+function cabinSection() {
+  const rows = CABIN_PARAMS.map((p) => [p.label, p.unit, limitText(p), srcTag(CABIN_LIMIT_SOURCE), p.action, srcTag(CABIN_SOURCE)]);
+  rows.push(['Crew rule', '', '2+ crew, same symptom, cabin out of range', srcTag(CABIN_LIMIT_SOURCE), 'One cabin case, non-clinical, no approval', srcTag(CABIN_SOURCE)]);
+  return [
+    h('p', { text: 'Closed cabin environment is one of the five NASA HRP hazards. When several crew share a symptom while a cabin parameter is out of range, the cause is likely the ship, not the person. The limits below are demo assumptions; NASA is cited only for the hazard, not for these numbers.' }),
+    table(['Parameter', 'Unit', 'Demo limit', 'Limit basis', 'Agent action', 'Why in space'], rows),
+  ];
+}
+
 function indexSection() {
   const wrows = Object.entries(WEIGHTS).map(([k, w]) => [SYS_LABEL[k] || k, String(w)]);
   const prows = Object.entries(POINTS).map(([k, p]) => [k[0].toUpperCase() + k.slice(1), String(p)]);
@@ -219,6 +229,7 @@ export default function render(root) {
     section('Rules', rulesSection()),
     section('Escalation by distance', escalationSection()),
     section('What the onboard agent can and cannot do', agentSection()),
+    section('Cabin environment', cabinSection()),
     section('Synthetic data passport', passportSection()),
     section('CrewCheck Index', indexSection()),
     section('All sources', allSources()),

@@ -13,6 +13,7 @@ export const SOURCES = {
   'nasa-bone': { kind: 'nasa', short: 'NASA HRP, Bone', title: 'NASA HRP: Risk of Spaceflight-Induced Bone Changes', url: 'https://www.nasa.gov/reference/risk-of-spaceflight-induced-bone-changes/' },
   'nasa-cardio': { kind: 'nasa', short: 'NASA HRP, Cardiovascular', title: 'NASA HRP: Risk of Cardiovascular Adaptations', url: 'https://www.nasa.gov/reference/risk-of-cardiovascular-adaptations/' },
   'nasa-behavior': { kind: 'nasa', short: 'NASA HRP, Behavioral', title: 'NASA HRP: Risk of Behavioral Conditions and Psychiatric Disorders', url: 'https://www.nasa.gov/reference/risk-of-behavioral-conditions-and-psychiatric-disorders/' },
+  'nasa-closed-env': { kind: 'nasa', short: 'NASA HRP, Closed Environments', title: 'NASA HRP Hazard: Hostile and Closed Environments', url: 'https://www.nasa.gov/hrp/hazard-hostile-closed-environments/' },
   'nasa-immune': { kind: 'nasa', short: 'NASA HRP, Immune', title: 'NASA HRP: Risk of Altered Immune System Responses', url: 'https://www.nasa.gov/reference/risk-of-altered-immune-system-responses/' },
   'nasa-std-3001': { kind: 'nasa', short: 'NASA-STD-3001 Vol. 1', title: 'NASA-STD-3001 Volume 1 Rev C, Crew Health', url: 'https://www.nasa.gov/wp-content/uploads/2023/11/nasa-std-3001-vol-1-rev-c-with-signature.pdf' },
   'csa-biomonitor': { kind: 'agency', short: 'CSA Bio-Monitor', title: 'Canadian Space Agency: Bio-Monitor', url: 'https://www.asc-csa.gc.ca/eng/sciences/bio-monitor.asp' },

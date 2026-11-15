@@ -12,7 +12,7 @@ const srcTag = (id) => {
 const fmt = (v) => (v == null ? '–' : Number.isInteger(v) ? String(v) : v.toFixed(1));
 
 // Drawer opened from the body map. Text lives behind this button only.
-export function renderWhy(container, { systemId, ev, onClose }) {
+export function renderWhy(container, { systemId, ev, onClose, cabin = null }) {
   const sys = SYSTEMS.find((s) => s.id === systemId);
   const ex = EXPLAIN[systemId];
   const st = ev.systems[systemId];
@@ -48,6 +48,7 @@ export function renderWhy(container, { systemId, ev, onClose }) {
     row('✦', 'In space', [h('span', { text: ex.space }), srcTag(ex.spaceSource), ex.extraSource ? srcTag(ex.extraSource) : null]),
     row('⚖', 'Rule', fired),
     row('→', 'Do', doList),
+    cabin ? row('⌂', 'Cabin', [h('span', { text: cabin }), confBadge('hypothesis')]) : null,
     h('div', { class: 'why-foot', text: `Stored on board · works without Earth link · ${KIND_LABEL[SOURCES[ex.spaceSource].kind]}` }),
   ]);
   container.replaceChildren(panel);

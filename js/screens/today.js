@@ -1,5 +1,5 @@
 import { h, confBadge } from '../ui.js';
-import { state, set, person, mission, verdictFor, statusStrip, eventsFor, setLiveAlert, localEntry, recordsOf } from '../state.js';
+import { state, set, person, mission, verdictFor, statusStrip, eventsFor, setLiveAlert, localEntry, recordsOf, cabinCase } from '../state.js';
 import { renderStreak, renderPatch } from '../viz/badges.js';
 import { MISSIONS, missionById } from '../data/missions.js';
 import { SYSTEMS } from '../data/rules.js';
@@ -25,7 +25,7 @@ import { story, renderStoryBar, decorate, currentStep } from './story.js';
 import { renderCase, renderAgentLog, noteIsOpen } from './case-card.js';
 
 const flagged = (ev) => Object.entries(ev.systems).filter(([, s]) => s.status === 'yellow' || s.status === 'red').map(([k]) => k).sort().join(',');
-const EVENT_ICON = { adaptation: 'moon', 'missed-workouts': 'run', 'slow-drift': 'moon', 'treadmill-maintenance': 'run', 'on-call': 'clock', countermeasure: 'shield', spe: 'rad' };
+const EVENT_ICON = { adaptation: 'moon', 'missed-workouts': 'run', 'slow-drift': 'moon', 'treadmill-maintenance': 'run', 'on-call': 'clock', countermeasure: 'shield', spe: 'rad', 'cabin-co2': 'cabin' };
 
 // Data sources: icon only on screen; tap shows what it feeds and lights those body zones.
 const SOURCES = [
@@ -162,11 +162,15 @@ export function renderToday(root, hooks = {}) {
   const vbox = h('div', { class: 'vd-box' });
   renderVerdict(vbox, { ev, v, records, mission: m, selfName: p.name.split(' ')[0], onRule: (sys) => set({ system: sys }) });
   const decideKids = [h('div', { class: 'col-h' }, [h('span', { class: 'col-n', text: '2' }), h('span', { text: 'Decide' })]), vbox];
+  // Crew rule: this person is part of a shared cabin case (non-clinical, changes no status).
+  const cab = cabinCase();
+  const inCab = !!cab?.who.includes(p.id);
+  if (inCab) decideKids.push(h('a', { class: 'cab-chip', href: '#/crew', title: 'Likely shared cause: open Crew' }, [icon('cabin'), h('span', { text: `Cabin: ${cab.word}` }), confBadge('hypothesis')]));
   if (state.day <= ADAPTATION_DAYS && v.status === 'yellow') decideKids.push(h('div', { class: 'verdict-ctx', title: 'Short sleep and headaches are expected while the body adapts to microgravity', text: 'Adaptation week · expected' }));
   if (state.system) {
     const whyBox = h('div', { class: 'why-box' });
     decideKids.push(whyBox);
-    renderWhy(whyBox, { systemId: state.system, ev, onClose: () => set({ system: null }) });
+    renderWhy(whyBox, { systemId: state.system, ev, onClose: () => set({ system: null }), cabin: inCab ? `May be shared: cabin ${cab.label}` : null });
     if (lastSystem !== state.system) requestAnimationFrame(() => whyBox.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
   }
   lastSystem = state.system;

@@ -4,6 +4,8 @@ import { evaluate } from './engine/evaluate.js';
 import { escalate } from './engine/escalation.js';
 import { followUp } from './engine/followup.js';
 import { RULES } from './data/rules.js';
+import { generateCabin } from './demo/cabin.js';
+import { commonCause } from './engine/cabin.js';
 
 const listeners = new Set();
 
@@ -31,6 +33,9 @@ export function recordsOf(personId) {
     return e ? { ...r, ...e } : r;
   });
 }
+export const cabin = generateCabin();
+// Crew rule on the cabin: one case for everyone with the same symptom, or null.
+export const cabinCase = (day = state.day) => commonCause(crew.map((c) => ({ id: c.id, record: recordsOf(c.id)[day - 1] })), cabin[day - 1]);
 export const person = (id = state.personId) => crew.find((c) => c.id === id);
 export const mission = () => missionById(state.missionId);
 export const eventsFor = (personId) => MISSION_EVENTS.filter((e) => e.who === 'all' || e.who.includes(personId));
