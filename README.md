@@ -59,14 +59,14 @@ The agent runs each case through **Watch, Flag, Plan, Act, Verify** (`js/engine/
 - **May** (grows with distance from Earth): watch signals, notify Earth, schedule a re-measure, draft a report, page the crew medic, track the case.
 - **Never**: diagnose, choose medicines or doses, close a red case alone, change a status or a threshold.
 
-The case card shows what the agent has done and what waits for a person, with an **Approve** button. The "Agent may" levels are a design assumption and are labelled so in the app.
+The case card shows what the agent has done and what waits for a person, with an **Approve** button. The "Agent can" levels are a design assumption, stated on the Sources screen.
 
 ## Other parts
 - **Suit stream**, simulated and modelled on the CSA Bio-Monitor, with automatic alerts (try "Simulate SpO2 drop").
-- **One-minute check-in** of five fields: only what the suit cannot measure.
+- **My day**: what the rules ask this astronaut to do today, with day rings; clinical steps stay with the crew medic. Plus a one-minute check-in of five fields, only what the suit cannot measure.
 - **Countermeasure follow-up**: "did it work?" a few days later.
 - **Earth screen** as one picture: each report is an envelope that travels from the ship to Earth; the travel time is compressed and stated on screen.
-- **Crew monitor** for four members, **day rings**, streak, crew patch and the **CrewCheck Index** with open weights.
+- **Crew monitor** for four members with the cabin environment: when several crew members show the same symptom and a cabin reading such as CO2 is off, it flags "Cabin cause, not crew" (a hypothesis). Also day rings, streak, crew patch and the **CrewCheck Index** with open weights.
 - **Sources** screen: the decision chain as a picture, the data passport and every threshold with its source.
 - Radiation dose estimate and an instruments panel (drawer).
 
