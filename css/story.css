@@ -39,3 +39,6 @@
   .sn-points{gap:6px}.sn-pt{font-size:13px}.sn-pt-i{width:46px;height:46px}
   .sn-foot{flex-wrap:wrap}
 }
+.sn-num,.sn-mark{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--yellow);color:#06101f;font-weight:900;font-size:14px}
+.sn-mark{position:absolute;z-index:25;width:30px;height:30px;font-size:17px;box-shadow:0 0 0 3px rgba(6,16,31,.85),0 0 16px rgba(251,191,36,.6);pointer-events:none}
+.sn-look{flex-wrap:wrap}
