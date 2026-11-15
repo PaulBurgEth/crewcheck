@@ -1,12 +1,12 @@
 import { h } from '../ui.js';
 import { el } from '../viz/svg.js';
-import { state, saveEntry, localEntry, recordsOf, verdictFor, person } from '../state.js';
+import { state, saveEntry, localEntry, recordsOf, verdictFor, person, mission } from '../state.js';
 
 const filled = (v) => v !== '' && v != null;
 import { validateCheckin } from '../engine/validate.js';
 import { renderDayRing, renderPatch } from '../viz/badges.js';
 import { nextMeasurements } from './instruments.js';
-import { headlineText } from './verdict.js';
+import { whoActs } from './verdict.js';
 import { icon } from '../viz/icons.js';
 
 const NEXT_ICON = { 'Cognition tests': 'brain', Questionnaires: 'form', 'Periodic exams': 'drop' };
@@ -98,8 +98,8 @@ export default function render(root, { go } = {}) {
     status.append(
       h('div', { class: `ci-saved${v.status === 'red' ? ' ci-res-red' : ''}`, role: 'status' }, [
         renderPatch({ done: crewDone, names: state.crew.map((c) => c.name), size: 44, flash: crewDone.every(Boolean) }),
-        h('span', { class: 'ci-saved-t', text: v.status === 'red' ? `Saved · ${headlineText(v)}` : 'Saved · day closed' }),
-        h('button', { type: 'button', class: 'ci-btn ci-ghost', onclick: () => go && go('today'), text: v.status === 'green' ? 'Monitor: all clear' : `Monitor: ${headlineText(v)}` }),
+        h('span', { class: 'ci-saved-t', text: v.status === 'red' ? `Saved · ${whoActs(v, mission(), person().name.split(' ')[0]).title}` : 'Saved · day closed' }),
+        h('button', { type: 'button', class: 'ci-btn ci-ghost', onclick: () => go && go('today'), text: v.status === 'green' ? 'Monitor: all clear' : `Monitor: ${whoActs(v, mission(), person().name.split(' ')[0]).title}` }),
       ]),
     );
   }

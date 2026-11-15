@@ -135,7 +135,9 @@ export function createScene(container, { onMission, onCompare } = {}) {
     setTimeout(placeRing, 30);
     // The line length eases for 0.9 s; place the ring again once Earth has settled.
     ringTimer = setTimeout(placeRing, 950);
-    for (const p of plates.children) p.classList.toggle('on', (p.dataset.plate === 'near') === (m.oneWayMin * 2 < 1));
+    const near = m.oneWayMin * 2 < 1;
+    // Moon: Earth is live but care is days away, so they decide together and both plates light.
+    for (const p of plates.children) p.classList.toggle('on', p.dataset.plate === 'near' ? near : !near || m.id === 'moon');
     band.setAttribute('aria-label', v.tier === 'none' ? `${m.label}: all clear` : `${m.label}: ${NODE[v.tier][1]} acts`);
     container.dataset.tier = v.tier;
 

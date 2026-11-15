@@ -171,18 +171,26 @@ export function placeNarrator(root, card) {
     card.style.cssText = `left:${Math.max(0, (R.width - 560) / 2)}px;top:${root.querySelector('.today-head')?.offsetTop ?? 0}px;width:560px`;
     return;
   }
-  const b = spot.getBoundingClientRect();
-  const rel = { left: b.left - R.left, right: b.right - R.left, top: b.top - R.top, bottom: b.bottom - R.top };
+  const box = (e) => { const r = e.getBoundingClientRect(); return { l: r.left - R.left, r: r.right - R.left, t: r.top - R.top, b: r.bottom - R.top }; };
+  const rel = box(spot);
+  const others = s.spots.slice(1).map((id) => root.querySelector(`[data-spot="${id}"]`)).filter(Boolean).map(box);
   const ch = card.offsetHeight || 300;
-  const midY = Math.max(0, rel.top + Math.min(b.height, 260) / 2 - ch / 2);
-  if (R.width - rel.right >= W + 24) { card.classList.add('sn-r'); card.style.cssText = `left:${rel.right + 20}px;top:${midY}px;width:${W}px`; }
-  else if (rel.left >= W + 24) { card.classList.add('sn-l'); card.style.cssText = `left:${rel.left - W - 20}px;top:${midY}px;width:${W}px`; }
-  else {
-    const left = Math.min(Math.max(0, rel.left + b.width / 2 - W / 2), R.width - W);
-    const arrowX = Math.min(W - 28, Math.max(28, rel.left + b.width / 2 - left));
-    card.classList.add('sn-b');
-    card.style.cssText = `left:${left}px;top:${rel.bottom + 18}px;width:${W}px;--ax:${arrowX}px`;
-  }
+  const midY = Math.max(0, rel.t + Math.min(rel.b - rel.t, 260) / 2 - ch / 2);
+  const bx = Math.min(Math.max(0, (rel.l + rel.r) / 2 - W / 2), R.width - W);
+  // Candidates: right, left, below the main block. Skip one that leaves the screen or covers another lit block.
+  const cands = [
+    { cls: 'sn-r', l: rel.r + 20, t: midY },
+    { cls: 'sn-l', l: rel.l - W - 20, t: midY },
+    // Beside the whole lit group (e.g. right of body + suit) when the main block's own side is taken.
+    { cls: 'sn-r', l: Math.max(rel.r, ...others.map((o) => o.r)) + 20, t: midY },
+    { cls: 'sn-b', l: bx, t: rel.b + 18 },
+  ];
+  const hits = (c) => others.some((o) => c.l < o.r && c.l + W > o.l && c.t < o.b && c.t + ch > o.t);
+  const fits = (c) => c.l >= 0 && c.l + W <= R.width;
+  const c = cands.find((x) => fits(x) && !hits(x)) || cands.find(fits) || cands[2];
+  card.classList.add(c.cls);
+  const arrowX = Math.min(W - 28, Math.max(28, (rel.l + rel.r) / 2 - c.l));
+  card.style.cssText = `left:${c.l}px;top:${c.t}px;width:${W}px;--ax:${arrowX}px`;
 }
 
 // Dim everything except the step's elements (kept visible, not black).

@@ -53,3 +53,4 @@ Architecture source: NASA_SpaceApps_2026_ARCHITECTURE.md (approved 14.11.2026), 
 - **Ring "decides"** travels along the scene line to the acting node when the distance changes (re-placed after the 0.9 s line easing).
 - **Two plates under the scene**: "Near Earth: surgeon decides" and "Here: crew decides", the current one lit.
 - **Known gap**: the Check-in screen's "Monitor: …" button still uses the old headline text (Check-in was out of scope).
+- **QA fixes for story v2 and design differences (v24)**: on 375 the card takes its block's CSS order and sits right above it; the scroll keeps card and block in view under the sticky bar (second pass after layout settles, fixes direct links); on 1440 the card never covers another lit block (tries right, left, beside the whole lit group, below). Moon lights both plates ("decide together"). The strip says "each way" like the scene and Earth. The Check-in "Monitor: …" button uses the same who-acts headline.
