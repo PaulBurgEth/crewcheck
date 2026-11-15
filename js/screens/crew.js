@@ -1,5 +1,5 @@
 import { h, confBadge } from '../ui.js';
-import { state, mission, verdictFor, recordsOf, localEntry, statusStrip, cabin, cabinCase } from '../state.js';
+import { state, set, mission, verdictFor, recordsOf, localEntry, statusStrip, cabin, cabinCase } from '../state.js';
 import { evaluate } from '../engine/evaluate.js';
 import { el } from '../viz/svg.js';
 import { icon } from '../viz/icons.js';
@@ -10,6 +10,7 @@ import { SYSTEMS } from '../data/rules.js';
 import { CABIN_PARAMS } from '../data/cabin.js';
 import { cabinOut, radiationCase, SYMPTOMS } from '../engine/cabin.js';
 import { MISSION_EVENTS } from '../demo/generator.js';
+import { CABIN_EPISODE } from '../demo/cabin.js';
 
 const TIER_LABEL = { none: 'All clear', self: 'Handles it alone', crew: 'Crew medic', earth: 'Flight surgeon' };
 // The crew medic is a crew member; when the medic is the patient, the commander backs up (demo assumption).
@@ -58,19 +59,53 @@ function indexStrip(day) {
   ]);
 }
 
-// Mission ribbon marks: cabin events over the crew index strip.
+// Mission ribbon marks: cabin event days over the crew index strip; tap jumps to the day.
+const jump = (d) => set({ day: d, liveAlert: null });
 function cabinMarks() {
-  return h('div', { class: 'cab-marks', 'aria-hidden': 'true' }, MISSION_EVENTS.filter((e) => e.id.startsWith('cabin')).map((e) =>
-    h('span', { class: 'cab-mark', style: `left:${((e.day - 1) / 179) * 100}%`, title: `Day ${e.day}: ${e.label}` }, [icon('cabin')])));
+  const evs = MISSION_EVENTS.filter((e) => e.id.startsWith('cabin'));
+  const pos = (d) => `${((d - 1) / 179) * 100}%`;
+  const kids = [];
+  for (const e of evs) {
+    for (let d = CABIN_EPISODE.from; d <= CABIN_EPISODE.to; d++) kids.push(h('span', { class: 'cab-band', style: `left:${pos(d)}` }));
+    kids.push(h('button', { type: 'button', class: 'cab-mark', style: `left:${pos(e.day)}`, title: `Day ${e.day}: ${e.label}`, 'aria-label': `Go to day ${e.day}: ${e.label}`, onclick: () => jump(e.day) }, [icon('cabin')]));
+  }
+  return h('div', { class: 'cab-marks' }, kids);
+}
+
+// Always-visible way into the cabin episode, whatever day the screen opens on.
+function eventChip(day) {
+  const on = day >= CABIN_EPISODE.from && day <= CABIN_EPISODE.to;
+  return h('button', {
+    type: 'button', class: `cab-jump${on ? ' on' : ''}`, 'aria-pressed': String(on),
+    title: 'Shared cabin cause: open the day', onclick: () => { if (!on) jump(CABIN_EPISODE.from); },
+  }, [icon('cabin'), h('span', { text: `Cabin event · day ${CABIN_EPISODE.from}` })]);
 }
 
 // Cabin strip: four parameters plus radiation; a shared cause links the parameter to the affected crew.
 function caseBox(c) {
-  return h('div', { class: 'cab-case', role: 'status' }, [
-    h('div', { class: 'cab-cause' }, [h('span', { text: c.param === 'rad' ? `${c.word} · ${c.who.length} crew` : `Likely cabin cause · ${c.who.length} crew` }), confBadge('hypothesis')]),
-    h('div', { class: 'cab-act' }, [icon(c.param === 'rad' ? 'shield' : 'fan'), h('span', { text: c.action })]),
-    h('div', { class: 'cab-done' }, [icon('check'), h('span', { text: 'Agent: crew alerted' })]),
-    h('div', { class: 'cab-tag', text: 'Non-clinical · no approval' }),
+  if (c.param === 'rad') {
+    return h('div', { class: 'cab-case', role: 'status' }, [
+      h('div', { class: 'cab-cause' }, [h('span', { text: `${c.word} · ${c.who.length} crew` }), confBadge('hypothesis')]),
+      h('div', { class: 'cab-act' }, [icon('shield'), h('span', { text: c.action })]),
+      h('div', { class: 'cab-done' }, [icon('check'), h('span', { text: 'Agent: crew alerted' })]),
+      h('div', { class: 'cab-tag', text: 'Non-clinical · no approval' }),
+    ]);
+  }
+  const sym = SYMPTOMS.find((s) => s.id === c.symptom)?.label || 'Same symptom';
+  return h('div', { class: 'cab-case cab-big', role: 'status' }, [
+    h('div', { class: 'cab-title' }, [icon('cabin'), h('span', { text: 'Cabin cause, not crew' }), confBadge('hypothesis')]),
+    h('div', { class: 'cab-why' }, [
+      h('span', { class: 'cw' }, [icon('people'), h('b', { text: String(c.who.length) }), h('span', { text: 'crew' })]),
+      h('span', { class: 'cw-dot', text: '·' }),
+      h('span', { class: 'cw', title: sym }, [icon('person'), h('span', { text: 'same symptom' })]),
+      h('span', { class: 'cw-dot', text: '·' }),
+      h('span', { class: 'cw warn' }, [icon('co2'), h('span', { text: c.word })]),
+    ]),
+    h('div', { class: 'cab-do' }, [
+      h('span', { class: 'cab-act' }, [icon('fan'), h('span', { text: c.action })]),
+      h('span', { class: 'cab-tag', text: 'Non-clinical' }),
+      h('span', { class: 'cab-done' }, [icon('check'), h('span', { text: 'Crew alerted' })]),
+    ]),
   ]);
 }
 function cabinStrip(day, cases, rad) {
@@ -140,7 +175,7 @@ export default function renderCrew(root, { go }) {
 
   const patch = h('div', { class: 'crew-patch' });
   const head = h('div', { class: 'crew-head' }, [
-    h('div', {}, [h('div', { class: 'crew-title', text: `Crew · Day ${state.day}` }), h('div', { class: 'muted', text: `${m.label} · ${m.careLabel}` })]),
+    h('div', {}, [h('div', { class: 'crew-title', text: `Crew · Day ${state.day}` }), h('div', { class: 'muted', text: `${m.label} · ${m.careLabel}` }), eventChip(state.day)]),
     h('div', { class: `crew-index i-${indexColor(cIdx)}`, title: 'CrewCheck Index (formula on Sources)' }, [h('span', { class: 'ci-num', text: cIdx ?? '–' }), h('span', { class: 'ci-lab', text: 'Crew index' }), h('div', { class: 'ci-ribbon' }, [indexStrip(state.day), cabinMarks()]), h('span', { class: 'ci-sub' }, [h('span', { text: '100 = all normal' }), h('a', { href: '#/sources', class: 'ci-src', title: 'Formula on Sources', 'aria-label': 'Formula on Sources' }, [icon('rule')])])]),
     h('div', { class: 'crew-patch-wrap' }, [patch, h('div', { class: 'ci-sub', text: doneCount === 4 ? 'Crew patch complete' : `Crew patch: ${doneCount} of 4 checked in` })]),
   ]);
