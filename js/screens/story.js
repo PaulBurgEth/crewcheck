@@ -11,13 +11,13 @@ export const STEPS = [
     badge: 'Day 1 · Launch', title: 'Meet the mission', look: ['envelope', 'The distance line'],
     text: 'Maya Okafor, one of four crew, starts a 180-day flight to Mars. As Earth gets farther away, its answer takes longer to arrive.' },
   { id: 'sense', name: 'Sense', day: 10, mission: 'mars-transit', spots: ['body', 'suit'], ms: 7500,
-    badge: 'Day 10 · All clear', title: 'The suit does the measuring', look: ['suit', 'Body and live lines'],
+    badge: 'Day 10 · All clear', title: 'The suit does the measuring', look: ['suit', 'Body and live lines'], marks: ['Body', 'Live lines'],
     text: "Pulse, breathing and oxygen stream in on their own. Everything sits inside Maya's personal norm, so nothing asks for her attention." },
   { id: 'small', name: 'Small', day: 60, mission: 'mars-transit', spots: ['rules', 'act'], ms: 8000,
-    badge: 'Day 60 · Missed workouts', title: 'A small problem, handled on board', look: ['rule', 'Verdict and agent'],
+    badge: 'Day 60 · Missed workouts', title: 'A small problem, handled on board', look: ['rule', 'Verdict and agent'], marks: ['Verdict', 'Agent'],
     text: 'A week of missed exercise shows up. The rules flag it, the agent sets a reminder and a re-check, and Maya handles it herself.' },
   { id: 'drift', name: 'Drift', from: 103, day: 118, mission: 'mars-transit', spots: ['timeline', 'body'], ms: 9000,
-    badge: 'Day 103 → 118 · Sleep drift', title: 'Three signals drift together', look: ['clock', 'Mission ribbon and body'],
+    badge: 'Day 103 → 118 · Sleep drift', title: 'Three signals drift together', look: ['clock', 'Mission ribbon and body'], marks: ['Mission ribbon', 'Body'],
     text: 'Sleep drops, mood follows and blood pressure climbs. One alone is noise. Three together is a pattern.' },
   { id: 'rules', name: 'Rules', day: 118, mission: 'mars-transit', spots: ['rules'], ms: 8000,
     badge: 'Day 118 · 3 linked signals', title: 'Rules decide, and show why', look: ['scale', 'Bars in the verdict'],
@@ -118,7 +118,9 @@ export function renderNarrator(card) {
     h('h3', { class: 'sn-title' }, s.title),
     h('p', { class: 'sn-text' }, s.text),
     s.points ? h('div', { class: 'sn-points' }, s.points.map(([ic, t]) => h('div', { class: 'sn-pt' }, [h('span', { class: 'sn-pt-i' }, [icon(ic)]), h('span', {}, t)]))) : null,
-    s.look ? h('div', { class: 'sn-look' }, [h('span', { class: 'sn-look-k' }, 'Look at'), icon(s.look[0]), h('span', {}, s.look[1])]) : null,
+    s.marks
+      ? h('div', { class: 'sn-look' }, [h('span', { class: 'sn-look-k' }, 'Look at'), ...s.marks.flatMap((t, k) => [h('span', { class: 'sn-num' }, String(k + 1)), h('span', {}, t)])])
+      : s.look ? h('div', { class: 'sn-look' }, [h('span', { class: 'sn-look-k' }, 'Look at'), icon(s.look[0]), h('span', {}, s.look[1])]) : null,
     h('div', { class: 'sn-foot' }, [
       h('button', { type: 'button', class: 'sn-btn', 'aria-label': 'Back', disabled: st.i === 0, onclick: () => go(-1) }, [icon('back')]),
       h('div', { class: 'sn-dots', 'aria-label': `Step ${st.i + 1} of ${STEPS.length}` }, STEPS.map((x, k) => h('span', { class: `sn-dot${k === st.i ? ' on' : k < st.i ? ' done' : ''}` }))),
@@ -134,15 +136,31 @@ export function renderNarrator(card) {
 }
 
 // Place the card next to the first lit block, arrow pointing at it. Narrow screens: card right before the block.
+// Two lit blocks: each gets a numbered mark; the card names them by number.
+function placeMarks(root, s) {
+  root.querySelectorAll('.sn-mark').forEach((n) => n.remove());
+  if (!s.marks) return;
+  const R = root.getBoundingClientRect();
+  s.spots.forEach((id, k) => {
+    const el = root.querySelector(`[data-spot="${id}"]`);
+    if (!el) return;
+    const b = el.getBoundingClientRect();
+    root.append(h('span', { class: 'sn-mark', 'aria-hidden': 'true', style: `left:${b.left - R.left - 12}px;top:${b.top - R.top - 12}px` }, String(k + 1)));
+  });
+}
+
 export function placeNarrator(root, card) {
-  const spot = root.querySelector('.spot');
+  const s = currentStep();
+  const spot = s.spots.length ? root.querySelector(`[data-spot="${s.spots[0]}"]`) : null;
   card.classList.remove('sn-r', 'sn-l', 'sn-b', 'sn-c');
   if (matchMedia('(max-width: 760px)').matches) {
     card.style.cssText = '';
     const anchor = spot || root.querySelector('.today-head');
     if (anchor && card.nextSibling !== anchor) anchor.before(card);
+    placeMarks(root, s);
     return;
   }
+  placeMarks(root, s);
   if (card.parentNode !== root) root.append(card);
   const W = 380;
   const R = root.getBoundingClientRect();

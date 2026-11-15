@@ -66,3 +66,6 @@
 .scn-plate[data-plate=far].on{border-color:var(--yellow);background:rgba(251,191,36,.14)}
 @media (max-width:760px){.scn-ring-t{display:none}.scn-ring{width:54px;height:54px;margin:-27px 0 0 -27px}.scn-plate{font-size:12px;padding:6px 8px}}
 @media (prefers-reduced-motion:reduce){.scn-ring,.scn-plate{transition:none}}
+.sn-num,.sn-mark{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--yellow);color:#06101f;font-weight:900;font-size:14px}
+.sn-mark{position:absolute;z-index:25;width:30px;height:30px;font-size:17px;box-shadow:0 0 0 3px rgba(6,16,31,.85),0 0 16px rgba(251,191,36,.6);pointer-events:none}
+.sn-look{flex-wrap:wrap}

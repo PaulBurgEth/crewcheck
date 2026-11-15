@@ -206,7 +206,7 @@ export function renderToday(root, hooks = {}) {
   }
 
   decorate(shell.root);
-  if (story.on) { renderNarrator(shell.card); placeNarrator(shell.root, shell.card); } else shell.card.remove();
+  if (story.on) { renderNarrator(shell.card); placeNarrator(shell.root, shell.card); } else { shell.card.remove(); shell.root.querySelectorAll('.sn-mark').forEach((n) => n.remove()); }
   const step = story.on ? currentStep().id : null;
   // New story step: bring its first highlighted block into view (keep the story bar visible).
   if (step && step !== lastStep) setTimeout(() => {
