@@ -10,7 +10,7 @@ Architecture source: NASA_SpaceApps_2026_ARCHITECTURE.md (approved 14.11.2026), 
 - **CrewCheck Index** weights are a demo assumption and are shown with the formula.
 - **Radiation**: no career limit number is shown because the 600 mSv line in NASA-STD-3001 could not be read in this build.
 - **Clinical sources** that could not be opened (CDC fever, low-glucose levels, breathing rate) are labelled "Demo assumption".
-- **Advisor**: precomputed answers (Claude) for story days; optional live proxy, off by default (`PROXY_URL` empty). Advice is frozen next to the verdict and cannot change it (test).
+- **Advisor**: precomputed answers (Claude) for story days; optional provider-neutral adapter for onboard Ollama or Anthropic. Advice is frozen next to the verdict and cannot change it (test). Adapter or model failure leaves the precomputed answer in place.
 - **Service worker**: network first, cache fallback, versioned cache name.
 - **Hero name**: Maya Okafor (fictional). Alternatives offered: Lena Varga, Tomas Reyes.
 

@@ -51,7 +51,8 @@ export async function requestLiveAdvice(personId, day, payload, onDone, question
   pending.add(key);
   sent = [...sent.filter((t) => Date.now() - t < 60000), Date.now()];
   const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), 6000);
+  // The precomputed answer stays visible while a small onboard model loads; abort a stuck request.
+  const timer = setTimeout(() => ctl.abort(), 20000);
   try {
     const res = await fetch(PROXY_URL, {
       method: 'POST',
@@ -64,7 +65,8 @@ export async function requestLiveAdvice(personId, day, payload, onDone, question
     const d = await res.json();
     if (typeof d?.text !== 'string' || !Array.isArray(d.points)) return;
     const points = d.points.filter((p) => typeof p === 'string').slice(0, 3).map((p) => p.slice(0, 200));
-    cache.set(key, { text: d.text.slice(0, 700), points, origin: 'live' });
+    const origin = d.origin === 'onboard' ? 'onboard' : 'live';
+    cache.set(key, { text: d.text.slice(0, 700), points, origin });
     if (typeof onDone === 'function') onDone();
   } catch {
     // silent by design

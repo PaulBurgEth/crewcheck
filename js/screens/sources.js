@@ -209,7 +209,7 @@ function realSection() {
     'Simulated suit stream, modelled on CSA Bio-Monitor.',
     'Simulated downlink: nothing leaves the browser.',
     'AI advisor answers are precomputed with Claude and marked "AI-generated (Claude), precomputed".',
-    'In this demo the advisor would run on a cloud model; on a mission it would run on board.',
+    'Live advice can use onboard Ollama or a cloud model; rules decide either way.',
   ];
   return [h('ul', { class: 'so-list' }, items.map((t) => h('li', { text: t })))];
 }
