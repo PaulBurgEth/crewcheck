@@ -73,3 +73,9 @@
 /* Summary card: fixed in the middle of the screen */
 .sn.sn-c{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;z-index:60;transition:none}
 @media (max-width:760px){.sn.sn-c{position:fixed;margin:0}}
+/* Card waits (hidden) until the step's motion is over, then fades in at its final place */
+.sn{transition:opacity .3s}
+.sn.sn-wait{visibility:hidden;opacity:0}
+/* Drift: keep the outcome (verdict, agent) out of sight until its own step */
+.today[data-story=drift] [data-spot=rules],.today[data-story=drift] [data-spot=act],.today[data-story=drift] [data-spot=advisor],.today[data-story=drift] [data-spot=check]{opacity:.06!important;filter:blur(3px)!important}
+.cs-reveal .cs-done li,.cs-reveal .cs-human li{animation-delay:calc(var(--i) * .3s + .2s)!important}
