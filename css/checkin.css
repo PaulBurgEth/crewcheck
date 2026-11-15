@@ -52,3 +52,42 @@
 .suit-yellow{border-color:var(--yellow);color:var(--yellow)}
 .suit-red{border-color:var(--red);color:var(--red)}
 .suit-btn{min-height:44px;background:#1b2742;color:var(--text);border:1px solid var(--line);border-radius:12px;font-size:15px;cursor:pointer}
+
+/* My day: the astronaut's own screen */
+.md-top{display:flex;flex-direction:column;gap:12px}
+.md-next{background:var(--panel);border:2px solid var(--yellow);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.md-next.md-calm,.md-next.md-done{border-color:var(--green)}
+.md-k{color:var(--muted);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.md-act{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.md-act b{font-size:24px;line-height:1.2;flex:1;min-width:0}
+.md-ic{width:40px;height:40px;flex:none;color:var(--yellow)}
+.md-calm .md-ic,.md-done .md-ic{color:var(--green)}
+.md-ic-s{width:24px;height:24px;flex:none;color:var(--muted)}
+.md-btn{min-height:48px;min-width:96px;font-size:18px;font-weight:800;background:var(--green);color:#04130d;border:0;border-radius:12px}
+.md-ok{color:var(--green);font-weight:800;font-size:18px}
+.md-why{color:var(--muted);font-size:15px}
+.md-wait{display:flex;align-items:center;gap:8px;color:var(--text);font-size:15px;border-top:1px solid var(--line);padding-top:8px}
+.md-wait .md-ic-s{color:var(--blue)}
+.md-today{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;gap:16px;align-items:center}
+.md-today.closed{border-color:var(--green)}
+.md-ringcol{display:flex;flex-direction:column;align-items:center;gap:4px;flex:none}
+.md-closed{font-weight:800;font-size:15px;color:var(--muted)}
+.md-today.closed .md-closed{color:var(--green);font-size:18px}
+.md-right{flex:1;min-width:0}
+.md-sec{margin:0 0 8px;font-size:18px}
+.md-tasks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.md-task{display:flex;align-items:center;gap:10px;min-height:44px;padding:4px 8px;border-radius:12px;background:#0b1220;border:1px solid var(--line);transition:border-color .3s,background .3s}
+.md-task.on{border-color:rgba(52,211,153,.6);background:rgba(52,211,153,.08)}
+.md-task.on .md-ic-s{color:var(--green)}
+.md-tt{flex:1;min-width:0;font-size:16px}
+.md-st{color:var(--green);font-weight:800;font-size:14px}
+.md-tbtn{min-height:36px;min-width:64px;font-size:15px;font-weight:700;background:#1b2742;color:var(--text);border:1px solid var(--blue);border-radius:10px}
+.md-game{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:0 4px}
+.md-patch{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;font-weight:600}
+.md-pop .dring{animation:mdpop .7s ease 1}
+.md-pop .md-closed{animation:mdfade .7s ease 1}
+@keyframes mdpop{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes mdfade{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:none}}
+.ci-formhead{margin-top:6px}
+@media (max-width:480px){.md-act b{font-size:21px}.md-today{flex-direction:column;align-items:stretch}.md-ringcol{align-self:center}}
+@media (prefers-reduced-motion:reduce){.md-pop .dring,.md-pop .md-closed{animation:none}.md-task{transition:none}}

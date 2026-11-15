@@ -22,9 +22,6 @@
 .cab-links circle{fill:var(--yellow)}
 .crew-tile.cab-hit{box-shadow:inset 0 3px 0 var(--yellow)}
 .ci-ribbon{position:relative}
-.cab-marks{position:absolute;left:calc(50% - 80px);width:160px;top:-12px;height:12px}
-.cab-mark{position:absolute;transform:translateX(-50%);color:var(--yellow);line-height:0}
-.cab-mark .ic{width:12px;height:12px}
 .cab-chip{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 10px;border-radius:999px;border:1px solid var(--yellow);color:var(--yellow);text-decoration:none;font-size:14px;align-self:flex-start;width:fit-content}
 .cab-chip .ic{width:16px;height:16px}
 @media (max-width:640px){
@@ -36,3 +33,21 @@
 .src-earth,.so a.src-earth{color:#67e8f9;border-color:rgba(103,232,249,.4)}
 .ct-sym{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--yellow);border:1px solid color-mix(in srgb,var(--yellow) 50%,transparent);border-radius:999px;padding:2px 9px}
 .ct-sym .ic{width:14px;height:14px}
+.cab-marks{position:absolute;left:calc(50% - 80px);width:160px;top:-14px;height:42px;pointer-events:none}
+.cab-band{position:absolute;top:14px;height:24px;width:1px;background:color-mix(in srgb,var(--yellow) 55%,transparent)}
+.cab-mark{position:absolute;top:0;transform:translateX(-50%);color:var(--yellow);line-height:0;background:none;border:0;padding:0;pointer-events:auto}
+.cab-mark .ic{width:14px;height:14px}
+.cab-jump{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:6px 12px;border-radius:999px;border:1.5px solid var(--yellow);background:color-mix(in srgb,var(--yellow) 10%,transparent);color:var(--yellow);font-weight:600;font-size:14px}
+.cab-jump .ic{width:16px;height:16px}
+.cab-jump:hover,.cab-jump:focus-visible{background:color-mix(in srgb,var(--yellow) 22%,transparent);outline:none}
+.cab-jump.on{cursor:default;background:color-mix(in srgb,var(--yellow) 22%,transparent)}
+.cab-case.cab-big{flex-direction:column;align-items:flex-start;gap:6px;border:1px solid var(--yellow);border-radius:14px;padding:10px 14px;background:color-mix(in srgb,var(--yellow) 8%,transparent)}
+.cab-title{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:700;color:var(--yellow)}
+.cab-title .ic{width:20px;height:20px}
+.cab-why{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:15px}
+.cw{display:inline-flex;align-items:center;gap:5px}
+.cw.warn{color:var(--yellow)}
+.cw-dot{color:var(--muted)}
+.cab-do{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;font-size:14px}
+@media (max-width:640px){.cab-title{font-size:16px}.cab-case.cab-big{width:100%}}
+.cab-case.cab-big{flex-basis:100%;margin-left:0}

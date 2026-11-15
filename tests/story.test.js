@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { STEPS } from '../js/screens/story.js';
+import { STEPS, stepDuration, stepTiming } from '../js/screens/story.js';
 import { evaluate } from '../js/engine/evaluate.js';
 import { escalate } from '../js/engine/escalation.js';
 import { missionById } from '../js/data/missions.js';
@@ -21,10 +21,22 @@ test('story v2: nine steps from day 1, each with day, badge, title and two-sente
   }
 });
 
-test('story v2: Play takes at most 75 s, each step at least 5 s', () => {
-  const total = STEPS.reduce((a, s) => a + s.ms, 0);
-  assert.ok(total <= 75000, String(total));
-  for (const s of STEPS) assert.ok(s.ms >= 5000, s.id);
+test('story v2: Play takes at most 100 s; each step holds at least 6 s after its motion ends', () => {
+  let day = 1;
+  let total = 0;
+  for (const s of STEPS) {
+    const d = stepDuration(s, s.from ?? (day < s.day ? day : null));
+    assert.ok(d - stepTiming(s, day).animEnd >= 6000, s.id);
+    total += d;
+    day = s.day;
+  }
+  assert.ok(total <= 100000, String(total));
+});
+
+test('story v2: distance step switches ISS then Mars transit and lights scene and verdict', () => {
+  const s = STEPS.find((x) => x.id === 'distance');
+  assert.deepEqual(s.missions, ['iss', 'mars-transit']);
+  assert.deepEqual(s.spots, ['scene', 'rules']);
 });
 
 test('story v2: days in the cards match the data', () => {

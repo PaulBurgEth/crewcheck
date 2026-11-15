@@ -70,3 +70,18 @@
 .sn-mark{position:absolute;z-index:25;width:30px;height:30px;font-size:17px;box-shadow:0 0 0 3px rgba(6,16,31,.85),0 0 16px rgba(251,191,36,.6);pointer-events:none}
 .sn-look{flex-wrap:wrap}
 @media (max-width:760px){.sn{padding:12px;gap:7px}.sn-title{font-size:20px}.sn-text{font-size:15px;line-height:1.4}.sn-badge{font-size:12px}.sn-btn{padding:7px 12px}}
+/* Summary card: fixed in the middle of the screen */
+.sn.sn-c{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;z-index:60;transition:none}
+@media (max-width:760px){.sn.sn-c{position:fixed;margin:0}}
+/* Card waits (hidden) until the step's motion is over, then fades in at its final place */
+.sn{transition:opacity .3s}
+.sn.sn-wait{visibility:hidden;opacity:0}
+/* Drift: keep the outcome (verdict, agent) out of sight until its own step */
+.today[data-story=drift] [data-spot=rules],.today[data-story=drift] [data-spot=act],.today[data-story=drift] [data-spot=advisor],.today[data-story=drift] [data-spot=check]{opacity:.06!important;filter:blur(3px)!important}
+.cs-reveal .cs-done li,.cs-reveal .cs-human li{animation-delay:calc(var(--i) * .3s + .2s)!important}
+/* Story: no forecast chip (it needs its own explanation) */
+.today[data-story] .ahead-chip{display:none!important}
+/* Suit alert from "Simulate SpO2 drop": large and pulsing so the effect is seen */
+.vd-live{font-size:15px;padding:6px 14px;box-shadow:0 0 0 3px rgba(248,113,113,.25)}
+@media (prefers-reduced-motion:no-preference){.vd-live{animation:vdlive 1s ease-in-out infinite alternate}}
+@keyframes vdlive{from{box-shadow:0 0 0 2px rgba(248,113,113,.2)}to{box-shadow:0 0 0 8px rgba(248,113,113,.45)}}

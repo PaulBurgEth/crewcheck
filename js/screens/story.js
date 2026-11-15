@@ -22,21 +22,34 @@ export const STEPS = [
   { id: 'rules', name: 'Rules', day: 118, mission: 'mars-transit', spots: ['rules'], ms: 8000,
     badge: 'Day 118 · 3 linked signals', title: 'Rules decide, and show why', look: ['scale', 'Bars in the verdict'],
     text: "Each bar shows Maya's own norm, the threshold and today's value. Every rule names its source. The AI explains but never decides." },
-  { id: 'distance', name: 'Distance', day: 118, missions: ['iss', 'moon', 'mars-transit'], spots: ['scene'], ms: 9000,
-    badge: 'Day 118 · ISS → Moon → Mars', title: 'Who acts depends on distance', look: ['person', 'The lit node'],
-    text: 'Near Earth, the flight surgeon answers in seconds and decides. On the way to Mars the answer takes 40 minutes, so the crew medic acts now.' },
+  { id: 'distance', name: 'Distance', day: 118, missions: ['iss', 'mars-transit'], hold: 3500, spots: ['scene', 'rules'], ms: 9000,
+    badge: 'Day 118 · ISS → Mars', title: 'Who acts depends on distance', look: ['person', 'The lit node'], marks: ['Distance', 'Verdict'],
+    text: 'Near Earth, the flight surgeon answers in seconds and decides. Watch the switch to Mars: the answer now takes 40 minutes, so the crew medic acts.' },
   { id: 'act', name: 'Act', day: 121, mission: 'mars-transit', spots: ['act'], ms: 8000,
     badge: 'Day 121 · Countermeasure', title: 'The agent runs the case', look: ['spark', 'Onboard agent card'],
     text: 'It schedules the re-measure, sends the report and pages the medic on its own. Anything clinical waits for a human to approve.' },
   { id: 'check', name: 'Check', day: 128, mission: 'mars-transit', spots: ['check'], ms: 8000,
     badge: 'Day 128 · One week later', title: 'Did it work?', look: ['check', 'Result check'],
-    text: 'The agent re-checks a week later. Sleep is back in range, pressure is not, so the case stays open and moves up a step.' },
+    text: 'The agent re-checks a week later. Sleep is back in range, pressure is not, so the case stays open and goes to the crew medic.' },
   { id: 'why', name: 'Why', day: 128, mission: 'mars-transit', spots: [], ms: 8000,
     badge: 'Day 128 · Summary', title: 'What makes this different', look: null,
     text: 'Decisions move on board as Earth gets farther. Rules decide and show their sources. An agent follows each case to the end.',
     points: [['envelope', 'Decides on board'], ['rule', 'Rules with sources'], ['spark', 'Agent runs the case']] },
 ];
 const LAST = STEPS.length - 1;
+
+// Timing: the card appears once the step's own motion is over (slider sweep, distance switch, agent list),
+// then the step holds for reading: about a second per ten words, at least 6 s.
+const SWEEP_MS = 2000;
+const REVEAL_MS = 2200;
+export const readMs = (s) => Math.max(6000, Math.round(s.text.split(/\s+/).length / 10) * 1000);
+export function stepTiming(s, fromDay) {
+  if (s.missions) return { cardAt: 300, animEnd: (s.hold || 2200) * (s.missions.length - 1) + 1300 };
+  const sweeps = s.from != null || (fromDay != null && fromDay < s.day);
+  const settle = (sweeps ? SWEEP_MS : 0) + 400 + (s.id === 'act' ? REVEAL_MS : 0);
+  return { cardAt: (sweeps ? SWEEP_MS : 0) + 400, animEnd: settle };
+}
+export const stepDuration = (s, fromDay) => stepTiming(s, fromDay).animEnd + readMs(s);
 
 const st = { on: false, i: 0, playing: false, timers: [] };
 let onChange = () => {};
@@ -57,18 +70,21 @@ function sweep(from, to) {
 function enter(i) {
   clearTimers();
   st.i = i;
+  st.ready = false;
   const s = currentStep();
   history.replaceState(null, '', `#/story?step=${i + 1}`);
   const base = { personId: HERO_ID, system: null, liveAlert: null, advisorOpen: false };
   const start = s.from ?? (state.day < s.day && state.day >= 1 && i > 0 ? state.day : s.day);
+  const t = stepTiming(s, s.from ?? (start < s.day ? start : null));
   if (s.missions) {
     set({ ...base, day: s.day, missionId: s.missions[0] });
-    s.missions.slice(1).forEach((m, k) => later(() => set({ missionId: m }), 2200 * (k + 1)));
+    s.missions.slice(1).forEach((m, k) => later(() => set({ missionId: m }), (s.hold || 2200) * (k + 1)));
   } else {
     set({ ...base, day: start, missionId: s.mission });
     if (s.day > start) sweep(start, s.day);
   }
-  if (st.playing && i < LAST) later(() => enter(i + 1), s.ms);
+  later(() => { st.ready = true; onChange(); }, t.cardAt);
+  if (st.playing && i < LAST) later(() => enter(i + 1), t.animEnd + readMs(s));
   if (st.playing && i === LAST) st.playing = false;
   onChange();
 }
@@ -109,7 +125,7 @@ export function renderStoryBar(container, { who = '' } = {}) {
 export function renderNarrator(card) {
   const s = currentStep();
   const last = st.i === LAST;
-  card.className = 'sn';
+  card.className = st.ready ? 'sn' : 'sn sn-wait';
   card.dataset.step = s.id;
   card.onclick = (e) => { if (st.playing && !e.target.closest('button')) togglePlay(); };
   card.replaceChildren(...[
@@ -131,7 +147,7 @@ export function renderNarrator(card) {
         ])
         : h('button', { type: 'button', class: 'sn-btn sn-primary', 'aria-label': 'Next', onclick: () => go(1) }, [h('span', {}, 'Next'), icon('next')]),
     ]),
-    st.playing ? h('div', { class: 'sn-play', style: `animation-duration:${s.ms}ms` }) : null,
+    st.playing && st.ready ? h('div', { class: 'sn-play', style: `animation-duration:${stepTiming(s).animEnd - stepTiming(s).cardAt + readMs(s)}ms` }) : null,
   ].filter(Boolean));
 }
 
@@ -153,6 +169,14 @@ export function placeNarrator(root, card) {
   const s = currentStep();
   const spot = s.spots.length ? root.querySelector(`[data-spot="${s.spots[0]}"]`) : null;
   card.classList.remove('sn-r', 'sn-l', 'sn-b', 'sn-c');
+  // No lit block (summary): pin the card to the middle of the visible screen, whatever the scroll.
+  if (!spot) {
+    if (card.parentNode !== root) root.append(card);
+    card.classList.add('sn-c');
+    card.style.cssText = '';
+    placeMarks(root, s);
+    return;
+  }
   if (matchMedia('(max-width: 760px)').matches) {
     card.style.cssText = '';
     const anchor = spot || root.querySelector('.today-head');
@@ -166,11 +190,6 @@ export function placeNarrator(root, card) {
   if (card.parentNode !== root) root.append(card);
   const W = 380;
   const R = root.getBoundingClientRect();
-  if (!spot) {
-    card.classList.add('sn-c');
-    card.style.cssText = `left:${Math.max(0, (R.width - 560) / 2)}px;top:${root.querySelector('.today-head')?.offsetTop ?? 0}px;width:560px`;
-    return;
-  }
   const box = (e) => { const r = e.getBoundingClientRect(); return { l: r.left - R.left, r: r.right - R.left, t: r.top - R.top, b: r.bottom - R.top }; };
   const rel = box(spot);
   const others = s.spots.slice(1).map((id) => root.querySelector(`[data-spot="${id}"]`)).filter(Boolean).map(box);
@@ -184,6 +203,8 @@ export function placeNarrator(root, card) {
     // Beside the whole lit group (e.g. right of body + suit) when the main block's own side is taken.
     { cls: 'sn-r', l: Math.max(rel.r, ...others.map((o) => o.r)) + 20, t: midY },
     { cls: 'sn-b', l: bx, t: rel.b + 18 },
+    { cls: 'sn-b', l: Math.max(0, rel.l), t: rel.b + 18 },
+    { cls: 'sn-b', l: Math.min(R.width - W, rel.r - W), t: rel.b + 18 },
   ];
   const hits = (c) => others.some((o) => c.l < o.r && c.l + W > o.l && c.t < o.b && c.t + ch > o.t);
   const fits = (c) => c.l >= 0 && c.l + W <= R.width;
