@@ -85,3 +85,5 @@
 .vd-live{font-size:15px;padding:6px 14px;box-shadow:0 0 0 3px rgba(248,113,113,.25)}
 @media (prefers-reduced-motion:no-preference){.vd-live{animation:vdlive 1s ease-in-out infinite alternate}}
 @keyframes vdlive{from{box-shadow:0 0 0 2px rgba(248,113,113,.2)}to{box-shadow:0 0 0 8px rgba(248,113,113,.45)}}
+/* Card shows at once, fully opaque (no fade: a fade over other blocks reads as see-through) */
+.sn{transition:none!important}

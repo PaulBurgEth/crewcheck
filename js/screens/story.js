@@ -15,11 +15,11 @@ export const STEPS = [
     text: "Pulse, breathing and oxygen stream in on their own. Everything sits inside Maya's personal norm, so nothing asks for her attention." },
   { id: 'small', name: 'Small', day: 60, mission: 'mars-transit', spots: ['rules', 'act'], ms: 8000,
     badge: 'Day 60 · Missed workouts', title: 'A small problem, handled on board', look: ['rule', 'Verdict and agent'], marks: ['Verdict', 'Agent'],
-    text: 'A week of missed exercise shows up. The rules flag it, the agent sets a reminder and a re-check, and Maya handles it herself.' },
+    text: 'A week of missed exercise shows up and the rules flag it. The agent sets a reminder, and My day tells Maya to train 90 minutes, so she handles it herself.' },
   { id: 'drift', name: 'Drift', from: 103, day: 118, mission: 'mars-transit', spots: ['timeline', 'body'], ms: 9000,
     badge: 'Day 103 → 118 · Sleep drift', title: 'Three signals drift together', look: ['clock', 'Mission ribbon and body'], marks: ['Mission ribbon', 'Body'],
     text: 'Sleep drops, mood follows and blood pressure climbs. One alone is noise. Three together is a pattern.' },
-  { id: 'rules', name: 'Rules', day: 118, mission: 'mars-transit', spots: ['rules'], ms: 8000,
+  { id: 'rules', name: 'Rules', day: 118, mission: 'mars-transit', spots: ['rules'], ms: 8000, read: 9500,
     badge: 'Day 118 · 3 linked signals', title: 'Rules decide, and show why', look: ['scale', 'Bars in the verdict'],
     text: "Each bar shows Maya's own norm, the threshold and today's value. Every rule names its source. The AI explains but never decides." },
   { id: 'distance', name: 'Distance', day: 118, missions: ['iss', 'mars-transit'], hold: 3500, spots: ['scene', 'rules'], ms: 9000,
@@ -30,7 +30,7 @@ export const STEPS = [
     text: 'It schedules the re-measure, sends the report and pages the medic on its own. Anything clinical waits for a human to approve.' },
   { id: 'check', name: 'Check', day: 128, mission: 'mars-transit', spots: ['check'], ms: 8000,
     badge: 'Day 128 · One week later', title: 'Did it work?', look: ['check', 'Result check'],
-    text: 'The agent re-checks a week later. Sleep is back in range, pressure is not, so the case stays open and goes to the crew medic.' },
+    text: 'The agent re-checks a week later. Sleep is back in range, pressure is not, so the plan only partly worked. The case stays open for the crew medic to review, and Earth gets the report.' },
   { id: 'why', name: 'Why', day: 128, mission: 'mars-transit', spots: [], ms: 8000,
     badge: 'Day 128 · Summary', title: 'What makes this different', look: null,
     text: 'Decisions move on board as Earth gets farther. Rules decide and show their sources. An agent follows each case to the end.',
@@ -42,8 +42,11 @@ const LAST = STEPS.length - 1;
 // then the step holds for reading: about a second per ten words, at least 6 s.
 const SWEEP_MS = 2000;
 const REVEAL_MS = 2200;
-export const readMs = (s) => Math.max(6000, Math.round(s.text.split(/\s+/).length / 10) * 1000);
-export function stepTiming(s, fromDay) {
+export const readMs = (s) => s.read || Math.max(6000, Math.round(s.text.split(/\s+/).length / 10) * 1000);
+// First step after a fresh load waits a little longer, so the page has settled before the card shows.
+const FIRST_MS = 1200;
+export function stepTiming(s, fromDay, first = false) {
+  if (first) { const t = stepTiming(s, fromDay); const cardAt = t.cardAt + FIRST_MS; return { cardAt, animEnd: Math.max(t.animEnd, cardAt) }; }
   if (s.missions) return { cardAt: 300, animEnd: (s.hold || 2200) * (s.missions.length - 1) + 1300 };
   const sweeps = s.from != null || (fromDay != null && fromDay < s.day);
   const settle = (sweeps ? SWEEP_MS : 0) + 400 + (s.id === 'act' ? REVEAL_MS : 0);
@@ -75,7 +78,8 @@ function enter(i) {
   history.replaceState(null, '', `#/story?step=${i + 1}`);
   const base = { personId: HERO_ID, system: null, liveAlert: null, advisorOpen: false };
   const start = s.from ?? (state.day < s.day && state.day >= 1 && i > 0 ? state.day : s.day);
-  const t = stepTiming(s, s.from ?? (start < s.day ? start : null));
+  const t = stepTiming(s, s.from ?? (start < s.day ? start : null), !st.booted);
+  st.booted = true;
   if (s.missions) {
     set({ ...base, day: s.day, missionId: s.missions[0] });
     s.missions.slice(1).forEach((m, k) => later(() => set({ missionId: m }), (s.hold || 2200) * (k + 1)));
@@ -142,7 +146,7 @@ export function renderNarrator(card) {
       h('div', { class: 'sn-dots', 'aria-label': `Step ${st.i + 1} of ${STEPS.length}` }, STEPS.map((x, k) => h('span', { class: `sn-dot${k === st.i ? ' on' : k < st.i ? ' done' : ''}` }))),
       last
         ? h('div', { class: 'sn-end' }, [
-          h('button', { type: 'button', class: 'sn-btn', onclick: () => { st.playing = false; enter(0); } }, [icon('replay'), h('span', {}, 'Replay')]),
+          h('button', { type: 'button', class: 'sn-btn', onclick: () => { st.playing = true; enter(0); } }, [icon('replay'), h('span', {}, 'Replay')]),
           h('button', { type: 'button', class: 'sn-btn sn-primary', onclick: stopStory }, 'Explore freely'),
         ])
         : h('button', { type: 'button', class: 'sn-btn sn-primary', 'aria-label': 'Next', onclick: () => go(1) }, [h('span', {}, 'Next'), icon('next')]),
