@@ -30,7 +30,7 @@ export const STEPS = [
     text: 'It schedules the re-measure, sends the report and pages the medic on its own. Anything clinical waits for a human to approve.' },
   { id: 'check', name: 'Check', day: 128, mission: 'mars-transit', spots: ['check'], ms: 8000,
     badge: 'Day 128 · One week later', title: 'Did it work?', look: ['check', 'Result check'],
-    text: 'The agent re-checks a week later. Sleep is back in range, pressure is not, so the case stays open and moves up a step.' },
+    text: 'The agent re-checks a week later. Sleep is back in range, pressure is not, so the case stays open and goes to the crew medic.' },
   { id: 'why', name: 'Why', day: 128, mission: 'mars-transit', spots: [], ms: 8000,
     badge: 'Day 128 · Summary', title: 'What makes this different', look: null,
     text: 'Decisions move on board as Earth gets farther. Rules decide and show their sources. An agent follows each case to the end.',
