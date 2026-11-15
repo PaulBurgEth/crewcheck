@@ -52,13 +52,34 @@ export function createScene(container, { onMission, onCompare } = {}) {
     h('div', { class: 'scn-end scn-right' }, [nodes.earth, earthSvg()]),
   ]);
   const clock = h('div', { class: 'scn-clock', 'aria-live': 'polite' });
+  // Ring "decides": travels along the line to whoever acts, so the hand-over is seen, not read.
+  const ring = h('div', { class: 'scn-ring', 'aria-hidden': 'true' }, [h('span', { class: 'scn-ring-t' }, 'decides')]);
+  band.append(ring);
+  const plates = h('div', { class: 'scn-plates' }, [
+    h('div', { class: 'scn-plate', 'data-plate': 'near' }, [icon('cross'), h('span', {}, 'Near Earth: surgeon decides')]),
+    h('div', { class: 'scn-plate', 'data-plate': 'far' }, [icon('people'), h('span', {}, 'Here: crew decides')]),
+  ]);
   const mayRow = h('div', { class: 'scn-may', 'data-spot': 'may' });
   const home = h('div', { class: 'scn-home-box' });
   const cmp = h('div', { class: 'scn-compare', hidden: true });
-  container.replaceChildren(h('div', { class: 'scn-top' }, [sw, cmpBtn]), band, mayRow, home, clock, cmp);
+  container.replaceChildren(h('div', { class: 'scn-top' }, [sw, cmpBtn]), band, mayRow, home, clock, plates, cmp);
 
   let key = null;
   let timer = 0;
+  let ringTimer = 0;
+  let ringOn = null;
+
+  function placeRing() {
+    const n = ringOn && nodes[ringOn];
+    if (!n || !band.isConnected) { ring.hidden = true; return; }
+    const d = n.querySelector('.scn-disc').getBoundingClientRect();
+    const b = band.getBoundingClientRect();
+    if (!d.width) return;
+    ring.hidden = false;
+    ring.style.left = `${d.left - b.left + d.width / 2}px`;
+    ring.style.top = `${d.top - b.top + d.height / 2}px`;
+    ring.dataset.who = ringOn;
+  }
 
   // Timer, not requestAnimationFrame: the first frame and the final text appear even in a background tab.
   function animate(m, travel) {
@@ -109,6 +130,12 @@ export function createScene(container, { onMission, onCompare } = {}) {
       n.classList.toggle('scn-act', v.tier === id);
       n.classList.toggle('scn-notify', v.tier !== id && (v.notify || []).includes(id));
     }
+    ringOn = v.tier === 'none' ? null : v.tier;
+    clearTimeout(ringTimer);
+    setTimeout(placeRing, 30);
+    // The line length eases for 0.9 s; place the ring again once Earth has settled.
+    ringTimer = setTimeout(placeRing, 950);
+    for (const p of plates.children) p.classList.toggle('on', (p.dataset.plate === 'near') === (m.oneWayMin * 2 < 1));
     band.setAttribute('aria-label', v.tier === 'none' ? `${m.label}: all clear` : `${m.label}: ${NODE[v.tier][1]} acts`);
     container.dataset.tier = v.tier;
 
@@ -130,5 +157,6 @@ export function createScene(container, { onMission, onCompare } = {}) {
       ])));
     }
   }
+  if (typeof window !== 'undefined') window.addEventListener('resize', () => setTimeout(placeRing, 50));
   return { update };
 }

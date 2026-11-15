@@ -10,3 +10,11 @@ export const DEFAULT_MISSION = 'mars-transit';
 export const missionById = (id) => MISSIONS.find((m) => m.id === id) || MISSIONS[2];
 // Earth can answer within a minute: the flight surgeon can take part in the decision.
 export const isReachable = (m) => m.oneWayMin * 2 < 1;
+// Who decides at this distance, for the mission strip (same split as the escalation matrix).
+export const decidesText = (m) => (!isReachable(m) ? 'Crew decides' : m.id === 'moon' ? 'Decide together' : 'Flight surgeon decides');
+export function oneWayText(m) {
+  const s = m.oneWayMin * 60;
+  if (s < 0.01) return 'Live link';
+  if (s < 60) return `${Math.round(s * 10) / 10} s one way`;
+  return `${Math.round(m.oneWayMin)} min one way`;
+}

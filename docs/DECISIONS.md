@@ -46,3 +46,10 @@ Architecture source: NASA_SpaceApps_2026_ARCHITECTURE.md (approved 14.11.2026), 
 - **Data check**: the brief's "workload peak around 103" is not in the data; day 103 is the first yellow sleep day of the drift (event "Sleep drift"), so the badge says "Sleep drift". Days are checked against the engine in `tests/story.test.js`.
 - **Exception to the text rule**: the narrator card may use full sentences.
 - **Fragile**: card placement is computed from the lit block's box (right, left, or below); re-placed on resize and on each render.
+
+## Differences visible in the design (15.11.2026)
+- **Mission strip** in the header on every screen: ship, mission, one-way delay, and "Crew decides" / "Flight surgeon decides" / "Decide together" (Moon). Tap opens the distance scene. Text from `decidesText`, `oneWayText` in `js/data/missions.js`.
+- **Verdict headline names who acts** (`whoActs` in `js/screens/verdict.js`): "Crew medic acts now" + "Earth answers in 40 min"; ISS "Flight surgeon decides" + "Answer in seconds". What happened ("3 linked signals") moved under WHAT. Engine tier and status unchanged (test).
+- **Ring "decides"** travels along the scene line to the acting node when the distance changes (re-placed after the 0.9 s line easing).
+- **Two plates under the scene**: "Near Earth: surgeon decides" and "Here: crew decides", the current one lit.
+- **Known gap**: the Check-in screen's "Monitor: …" button still uses the old headline text (Check-in was out of scope).
