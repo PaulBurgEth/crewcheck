@@ -15,6 +15,6 @@ export const decidesText = (m) => (!isReachable(m) ? 'Crew decides' : m.id === '
 export function oneWayText(m) {
   const s = m.oneWayMin * 60;
   if (s < 0.01) return 'Live link';
-  if (s < 60) return `${Math.round(s * 10) / 10} s one way`;
-  return `${Math.round(m.oneWayMin)} min one way`;
+  if (s < 60) return `${Math.round(s * 10) / 10} s each way`;
+  return `${Math.round(m.oneWayMin)} min each way`;
 }

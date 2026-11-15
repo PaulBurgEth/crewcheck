@@ -69,3 +69,4 @@
 .sn-num,.sn-mark{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--yellow);color:#06101f;font-weight:900;font-size:14px}
 .sn-mark{position:absolute;z-index:25;width:30px;height:30px;font-size:17px;box-shadow:0 0 0 3px rgba(6,16,31,.85),0 0 16px rgba(251,191,36,.6);pointer-events:none}
 .sn-look{flex-wrap:wrap}
+@media (max-width:760px){.sn{padding:12px;gap:7px}.sn-title{font-size:20px}.sn-text{font-size:15px;line-height:1.4}.sn-badge{font-size:12px}.sn-btn{padding:7px 12px}}
