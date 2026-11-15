@@ -70,3 +70,6 @@
 .sn-mark{position:absolute;z-index:25;width:30px;height:30px;font-size:17px;box-shadow:0 0 0 3px rgba(6,16,31,.85),0 0 16px rgba(251,191,36,.6);pointer-events:none}
 .sn-look{flex-wrap:wrap}
 @media (max-width:760px){.sn{padding:12px;gap:7px}.sn-title{font-size:20px}.sn-text{font-size:15px;line-height:1.4}.sn-badge{font-size:12px}.sn-btn{padding:7px 12px}}
+/* Summary card: fixed in the middle of the screen */
+.sn.sn-c{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;z-index:60;transition:none}
+@media (max-width:760px){.sn.sn-c{position:fixed;margin:0}}

@@ -153,6 +153,14 @@ export function placeNarrator(root, card) {
   const s = currentStep();
   const spot = s.spots.length ? root.querySelector(`[data-spot="${s.spots[0]}"]`) : null;
   card.classList.remove('sn-r', 'sn-l', 'sn-b', 'sn-c');
+  // No lit block (summary): pin the card to the middle of the visible screen, whatever the scroll.
+  if (!spot) {
+    if (card.parentNode !== root) root.append(card);
+    card.classList.add('sn-c');
+    card.style.cssText = '';
+    placeMarks(root, s);
+    return;
+  }
   if (matchMedia('(max-width: 760px)').matches) {
     card.style.cssText = '';
     const anchor = spot || root.querySelector('.today-head');
@@ -166,11 +174,6 @@ export function placeNarrator(root, card) {
   if (card.parentNode !== root) root.append(card);
   const W = 380;
   const R = root.getBoundingClientRect();
-  if (!spot) {
-    card.classList.add('sn-c');
-    card.style.cssText = `left:${Math.max(0, (R.width - 560) / 2)}px;top:${root.querySelector('.today-head')?.offsetTop ?? 0}px;width:560px`;
-    return;
-  }
   const box = (e) => { const r = e.getBoundingClientRect(); return { l: r.left - R.left, r: r.right - R.left, t: r.top - R.top, b: r.bottom - R.top }; };
   const rel = box(spot);
   const others = s.spots.slice(1).map((id) => root.querySelector(`[data-spot="${id}"]`)).filter(Boolean).map(box);

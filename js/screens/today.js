@@ -215,7 +215,7 @@ export function renderToday(root, hooks = {}) {
   // New story step: bring its first highlighted block into view (keep the story bar visible).
   const bringIntoView = () => {
     if (story.on) placeNarrator(shell.root, shell.card);
-    const spots = [...shell.root.querySelectorAll('.spot'), ...(story.on ? [shell.card] : [])];
+    const spots = [...shell.root.querySelectorAll('.spot'), ...(story.on && !shell.card.classList.contains('sn-c') ? [shell.card] : [])];
     if (!spots.length) return;
     const top = Math.min(...spots.map((e) => e.getBoundingClientRect().top));
     const bottom = Math.max(...spots.map((e) => e.getBoundingClientRect().bottom));
