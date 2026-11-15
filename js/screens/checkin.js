@@ -108,7 +108,7 @@ export default function render(root, { go } = {}) {
     if (!r.ok) {
       const order = ['mood', 'vision', 'headache', 'glucose', 'mass', 'sbp', 'dbp'];
       for (const k of order.filter((x) => r.errors[x])) {
-        const m = form[k] === 'not a number' ? `${k === 'sbp' ? 'Systolic' : k === 'dbp' ? 'Diastolic' : 'Value'}: numbers only` : r.errors[k];
+        const m = form[k] === 'not a number' ? `${{ sbp: 'Systolic', dbp: 'Diastolic', glucose: 'Glucose', mass: 'Body mass' }[k] || 'Value'}: numbers only` : r.errors[k];
         const key = k === 'vision' || k === 'headache' ? 'eyes' : k === 'sbp' || k === 'dbp' ? 'bp' : k;
         if (errs[key] && !errs[key].textContent) errs[key].textContent = m;
       }
@@ -191,5 +191,10 @@ export default function render(root, { go } = {}) {
     h('button', { type: 'button', class: 'ci-btn', onclick: save, text: 'Save' }),
   ]));
   // After saving, the reward sits at the top of the screen.
-  if (savedKey === `${personId}:${day}` && justSaved) { justSaved = false; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  if (savedKey === `${personId}:${day}` && justSaved) {
+    justSaved = false;
+    const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    // After the re-render settles, bring the ring and "Day closed" into view.
+    setTimeout(() => root.querySelector('.md-today')?.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'center' }), 60);
+  }
 }
