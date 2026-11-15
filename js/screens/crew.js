@@ -8,7 +8,7 @@ import { renderRings } from '../viz/rings.js';
 import { renderPatch } from '../viz/badges.js';
 import { SYSTEMS } from '../data/rules.js';
 import { CABIN_PARAMS } from '../data/cabin.js';
-import { cabinOut, radiationCase } from '../engine/cabin.js';
+import { cabinOut, radiationCase, SYMPTOMS } from '../engine/cabin.js';
 import { MISSION_EVENTS } from '../demo/generator.js';
 
 const TIER_LABEL = { none: 'All clear', self: 'Handles it alone', crew: 'Crew medic', earth: 'Flight surgeon' };
@@ -166,6 +166,7 @@ export default function renderCrew(root, { go }) {
       h('div', { class: 'ct-name', text: r.p.name }),
       h('div', { class: 'ct-role', text: r.p.role }),
       dots,
+      cc?.who.includes(r.p.id) ? h('div', { class: 'ct-sym', title: 'Shared symptom, linked to the cabin' }, [icon('cabin'), h('span', { text: SYMPTOMS.find((s) => s.id === cc.symptom).label })]) : null,
       h('div', { class: `ct-tier tier-${r.v.tier}`, text: tierText(r.p, r.v.tier, state.crew) }),
       h('div', { class: `ct-check ${r.done ? 'ok' : ''}`, text: r.done ? '✓ Checked in' : '○ Check-in due' }),
     ]);
