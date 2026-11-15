@@ -4,7 +4,8 @@ import { state, saveEntry, localEntry, recordsOf, verdictFor, person, mission } 
 
 const filled = (v) => v !== '' && v != null;
 import { validateCheckin } from '../engine/validate.js';
-import { renderDayRing, renderPatch } from '../viz/badges.js';
+import { renderDayRing, renderPatch, renderStreak } from '../viz/badges.js';
+import { myDayPlan, dayProgress } from '../myday.js';
 import { nextMeasurements } from './instruments.js';
 import { whoActs } from './verdict.js';
 import { icon } from '../viz/icons.js';
@@ -23,6 +24,10 @@ const MOUTHS = ['M12 29 Q20 21 28 29', 'M13 28 Q20 24 27 28', 'M13 27 L27 27', '
 
 let savedKey = null;
 let justSaved = false;
+// Tasks ticked on My day live only in this page's memory, like the check-ins.
+const marks = new Map();
+const marksOf = (key) => { if (!marks.has(key)) marks.set(key, new Set()); return marks.get(key); };
+let closedSeen = new Set();
 
 function face(n) {
   return el('svg', { viewBox: '0 0 40 40', width: 44, height: 44, class: 'ci-face-svg', 'aria-hidden': 'true' }, [
@@ -65,12 +70,7 @@ export default function render(root, { go } = {}) {
   const errs = {};
   const errBox = (key) => { errs[key] = h('div', { class: 'ci-err', role: 'alert' }); return errs[key]; };
   const moodBtns = [], visBtns = [], headBtns = [];
-  const ringBox = h('div', { class: 'ci-ring' });
-  const drawRing = (closed = false) => ringBox.replaceChildren(renderDayRing({ closed, segments: [
-    { label: 'Suit', on: true }, { label: 'Mood', on: filled(form.mood) }, { label: 'Eyes & head', on: filled(form.vision) && filled(form.headache) },
-    { label: 'Glucose', on: filled(form.glucose) && form.glucose !== 'not a number' }, { label: 'Body mass', on: filled(form.mass) && form.mass !== 'not a number' },
-  ] }));
-  const mark = (btns, val) => { btns.forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.v) === Number(val) && val !== ''))); if (typeof drawRing === 'function') drawRing(); };
+  const mark = (btns, val) => { btns.forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.v) === Number(val) && val !== ''))); };
 
   for (let n = 1; n <= 5; n++) {
     moodBtns.push(h('button', { type: 'button', class: 'ci-face', 'data-v': n, 'aria-label': `Mood ${n} of 5`, onclick: () => { form.mood = n; mark(moodBtns, n); } }, [face(n)]));
@@ -83,7 +83,7 @@ export default function render(root, { go } = {}) {
     class: 'ci-input', type: 'number', inputmode: 'decimal', step: 'any', placeholder: ph, 'aria-label': label,
     value: form[key] === '' ? null : String(form[key]),
     // A number field reports letters as an empty value; keep them as invalid text so validation rejects them.
-    oninput: (e) => { form[key] = e.target.validity?.badInput ? 'not a number' : e.target.value; drawRing(); },
+    oninput: (e) => { form[key] = e.target.validity?.badInput ? 'not a number' : e.target.value; },
   });
   const field = (f, body, errKeys) => h('section', { class: 'ci-field' }, [
     h('div', { class: 'ci-fhead' }, [h('h3', { class: 'ci-flabel', text: f.label }), f.note ? h('span', { class: 'ci-note', text: f.note }) : null]),
@@ -94,11 +94,9 @@ export default function render(root, { go } = {}) {
   const status = h('div', { class: 'ci-status' });
   if (savedKey === `${personId}:${day}`) {
     const { v } = verdictFor(personId, day);
-    const crewDone = state.crew.map((c) => (c.id === personId ? true : recordsOf(c.id)[day - 1]?.mood != null));
     status.append(
       h('div', { class: `ci-saved${v.status === 'red' ? ' ci-res-red' : ''}`, role: 'status' }, [
-        renderPatch({ done: crewDone, names: state.crew.map((c) => c.name), size: 44, flash: crewDone.every(Boolean) }),
-        h('span', { class: 'ci-saved-t', text: v.status === 'red' ? `Saved · ${whoActs(v, mission(), person().name.split(' ')[0]).title}` : 'Saved · day closed' }),
+        h('span', { class: 'ci-saved-t', text: v.status === 'red' ? `Saved · ${whoActs(v, mission(), person().name.split(' ')[0]).title}` : 'Check-in saved' }),
         h('button', { type: 'button', class: 'ci-btn ci-ghost', onclick: () => go && go('today'), text: v.status === 'green' ? 'Monitor: all clear' : `Monitor: ${whoActs(v, mission(), person().name.split(' ')[0]).title}` }),
       ]),
     );
@@ -123,12 +121,61 @@ export default function render(root, { go } = {}) {
     saveEntry(personId, day, r.entry);
   };
 
-  root.replaceChildren(h('div', { class: 'ci' }, [
-    h('div', { class: 'ci-head' }, [h('h2', { class: 'ci-title', text: `Check-in · ${person().name} · Day ${day}` }), h('div', { class: 'ci-ringcol' }, [ringBox,
+  const key = `${personId}:${day}`;
+  const top = h('div', { class: 'md-top' });
+  const formStart = h('h3', { class: 'md-sec ci-formhead', text: 'Quick check-in' });
+  const drawTop = () => {
+    const { v, ev } = verdictFor(personId, day);
+    const dm = marksOf(key);
+    const checkedIn = !!localEntry(personId, day);
+    const plan = myDayPlan({ v, ev, record: rec, marks: dm, checkedIn });
+    const prog = dayProgress(plan.tasks);
+    const justClosed = prog.closed && !closedSeen.has(key);
+    if (prog.closed) closedSeen.add(key); else closedSeen.delete(key);
+    const tick = (id) => { dm.add(id); drawTop(); };
+    const crewDone = state.crew.map((c) => (c.id === personId ? checkedIn : recordsOf(c.id)[day - 1]?.mood != null));
+
+    const n = plan.next;
+    const card = plan.calm
+      ? h('section', { class: 'md-next md-calm', 'aria-label': 'Your next step' }, [
+        h('div', { class: 'md-k', text: 'Your next step' }),
+        h('div', { class: 'md-act' }, [icon('check', 'md-ic'), h('b', { text: 'All clear · keep the routine' })]),
+      ])
+      : h('section', { class: `md-next${n?.done ? ' md-done' : ''}`, 'aria-label': 'Your next step' }, [
+        h('div', { class: 'md-k', text: 'Your next step' }),
+        n ? h('div', { class: 'md-act' }, [icon(n.icon, 'md-ic'), h('b', { text: n.text }),
+          n.done ? h('span', { class: 'md-ok', text: 'Done ✓' }) : h('button', { type: 'button', class: 'md-btn', onclick: () => tick(n.id), text: 'Done' })]) : null,
+        n ? h('div', { class: 'md-why', text: n.why }) : null,
+        plan.waiting ? h('div', { class: 'md-wait' }, [icon('cross', 'md-ic-s'), h('span', { text: plan.waiting })]) : null,
+      ]);
+
+    const list = h('ul', { class: 'md-tasks' }, plan.tasks.map((t) => h('li', { class: `md-task${t.done ? ' on' : ''}` }, [
+      icon(t.icon, 'md-ic-s'), h('span', { class: 'md-tt', text: t.text }),
+      t.done ? h('span', { class: 'md-st', text: t.auto ? 'Auto ✓' : '✓' })
+        : t.id === 'checkin' ? h('button', { type: 'button', class: 'md-tbtn', onclick: () => formStart.scrollIntoView({ behavior: 'smooth', block: 'start' }), text: 'Start' })
+          : h('button', { type: 'button', class: 'md-tbtn', onclick: () => tick(t.id), text: 'Done' }),
+    ])));
+
+    top.replaceChildren(card, h('section', { class: `md-today${prog.closed ? ' closed' : ''}${justClosed ? ' md-pop' : ''}` }, [
+      h('div', { class: 'md-ringcol' }, [
+        renderDayRing({ closed: prog.closed, size: 150, segments: plan.tasks.map((t) => ({ label: t.text, on: t.done })) }),
+        h('div', { class: 'md-closed', text: prog.closed ? 'Day closed' : `${prog.total - prog.done} to go` }),
+      ]),
+      h('div', { class: 'md-right' }, [h('h3', { class: 'md-sec', text: 'Today' }), list]),
+    ]), h('div', { class: 'md-game' }, [
+      renderStreak(recordsOf(personId), day),
+      h('div', { class: 'md-patch' }, [renderPatch({ done: crewDone, names: state.crew.map((c) => c.name), size: 56, flash: justClosed && crewDone.every(Boolean) }), h('span', { text: 'Crew patch' })]),
       // Next scheduled measurements: icon and day only.
       h('div', { class: 'ci-next', 'aria-label': 'Next measurements' }, nextMeasurements(day).slice(0, 3).map((m) => h('span', { class: 'ci-next-i', title: `${m.label}: day ${m.day}` }, [icon(NEXT_ICON[m.label] || 'clock'), h('b', { text: `d${m.day}` })]))),
-    ])]),
+    ]));
+  };
+  drawTop();
+
+  root.replaceChildren(h('div', { class: 'ci' }, [
+    h('div', { class: 'ci-head' }, [h('h2', { class: 'ci-title', text: `My day · ${person().name.split(' ')[0]} · Day ${day}` })]),
+    top,
     status,
+    formStart,
     h('div', { class: 'ci-auto' }, [
       h('div', { class: 'ci-auto-chips' }, AUTO.map((a) => h('span', { class: 'ci-chip', text: `${a} · auto ✓` }))),
       h('div', { class: 'ci-auto-note', text: 'From the suit' }),
@@ -143,7 +190,6 @@ export default function render(root, { go } = {}) {
     field(fBp, h('div', { class: 'ci-num' }, [input('sbp', 'Systolic', 'sys'), h('span', { class: 'ci-unit', text: '/' }), input('dbp', 'Diastolic', 'dia'), h('span', { class: 'ci-unit', text: 'mmHg' })]), ['bp']),
     h('button', { type: 'button', class: 'ci-btn', onclick: save, text: 'Save' }),
   ]));
-  drawRing(savedKey === `${personId}:${day}`);
   // After saving, the reward sits at the top of the screen.
   if (savedKey === `${personId}:${day}` && justSaved) { justSaved = false; window.scrollTo({ top: 0, behavior: 'smooth' }); }
 }

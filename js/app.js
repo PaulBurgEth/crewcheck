@@ -9,7 +9,7 @@ import { missionById, decidesText, oneWayText, isReachable } from './data/missio
 const SCREENS = [
   { id: 'crew', label: 'Crew' },
   { id: 'today', label: 'Monitor' },
-  { id: 'checkin', label: 'Check-in' },
+  { id: 'checkin', label: 'My day' },
   { id: 'trends', label: 'Trends' },
   { id: 'earth', label: 'Earth' },
   { id: 'sources', label: 'Sources' },
