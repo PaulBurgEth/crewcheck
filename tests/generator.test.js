@@ -37,7 +37,7 @@ test('passport complete and sources valid', () => {
       assert.ok(p[k].trim().length > 0, `${p.signal}.${k}`);
     }
     assert.ok(p.source in SOURCES, p.source);
-    assert.ok(['NASA HRP', 'Clinical norm', 'Demo assumption', 'Partner agency'].includes(p.basis));
+    assert.ok(['NASA HRP', 'Clinical norm', 'Demo assumption', 'Partner agency', 'Earth indoor reference'].includes(p.basis));
   }
 });
 

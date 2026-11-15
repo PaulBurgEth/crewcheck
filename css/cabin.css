@@ -1,0 +1,36 @@
+/* Cabin environment layer: Crew strip, links to affected crew, chip on the personal monitor. */
+.cab-wrap{position:relative}
+.cab{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px 14px;margin-bottom:40px}
+.cab.on{border-color:color-mix(in srgb,var(--yellow) 55%,var(--line))}
+.cab-h{display:flex;align-items:center;gap:6px;font-weight:600;color:var(--muted)}
+.cab .ic{width:18px;height:18px}
+.cab-icons{display:flex;gap:8px;flex-wrap:wrap}
+.cab-ic{display:inline-flex;align-items:baseline;gap:4px;padding:5px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-size:14px}
+.cab-ic .ic{align-self:center;color:var(--green)}
+.cab-ic b{color:var(--text);font-weight:600}
+.cab-u{font-size:12px}
+.cab-l{font-size:12px;opacity:.8}
+.cab-ic.warn{border-color:var(--yellow);background:color-mix(in srgb,var(--yellow) 14%,transparent);color:var(--yellow)}
+.cab-ic.warn .ic,.cab-ic.warn b{color:var(--yellow)}
+.cab-case{display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;margin-left:auto;font-size:14px}
+.cab-cause{display:flex;align-items:center;gap:8px;font-weight:600;color:var(--yellow)}
+.cab-act,.cab-done{display:inline-flex;align-items:center;gap:5px}
+.cab-done{color:var(--green)}
+.cab-tag{font-size:12px;color:var(--muted);border:1px dashed var(--line);border-radius:999px;padding:2px 8px}
+.cab-links{position:absolute;left:0;top:0;pointer-events:none;overflow:visible;z-index:2}
+.cab-links path{fill:none;stroke:var(--yellow);stroke-width:1.6;stroke-dasharray:5 4;opacity:.85}
+.cab-links circle{fill:var(--yellow)}
+.crew-tile.cab-hit{box-shadow:inset 0 3px 0 var(--yellow)}
+.ci-ribbon{position:relative}
+.cab-marks{position:absolute;left:calc(50% - 80px);width:160px;top:-12px;height:12px}
+.cab-mark{position:absolute;transform:translateX(-50%);color:var(--yellow);line-height:0}
+.cab-mark .ic{width:12px;height:12px}
+.cab-chip{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 10px;border-radius:999px;border:1px solid var(--yellow);color:var(--yellow);text-decoration:none;font-size:14px;align-self:flex-start;width:fit-content}
+.cab-chip .ic{width:16px;height:16px}
+@media (max-width:640px){
+  .cab{padding:10px 12px}
+  .cab-case{margin-left:0}
+  .cab-ic{padding:4px 7px;font-size:13px}
+}
+@media (max-width:760px){.today.v2 .cab-chip{order:3}}
+.src-earth,.so a.src-earth{color:#67e8f9;border-color:rgba(103,232,249,.4)}
