@@ -22,13 +22,16 @@ CrewCheck answers one question for every signal: **who acts now**, the astronaut
 6. **A case is followed to the end.** Re-measure, then an honest result, such as "Partly worked".
 
 ## See it in one minute
-1. Press **Play story** (about 40 seconds). Six steps run on the real app state, nothing is faked:
-   - **Sense**: the suit measures, Maya does nothing.
-   - **Drift**: three signals drift together on a Mars transit.
-   - **Rules**: rules decide, and every rule has a source.
-   - **Distance**: near Earth the flight surgeon answers; far away the crew acts.
-   - **Act**: the onboard agent acts within its limits; the crew medic approves the rest.
-   - **Check**: did it work? Sleep yes, pressure not yet.
+1. Press **Play story** (a little over a minute). Nine steps run on the real app state, nothing is faked:
+   - **Mission**: Maya, one of four crew, starts a 180-day flight to Mars.
+   - **Sense**: the suit does the measuring.
+   - **Small**: a small problem handled on board; My day tells Maya what to do.
+   - **Drift**: sleep, mood and blood pressure drift together.
+   - **Rules**: rules decide and show why.
+   - **Distance**: switches ISS → Mars transit on its own; who acts changes.
+   - **Act**: the onboard agent runs the case; anything clinical waits for a person.
+   - **Check**: sleep is back, pressure is not, so the plan partly worked and the case stays open.
+   - **Why**: what makes it different.
 2. Then **try it yourself**: drag the mission day, switch distance (ISS, Moon, Mars transit, Mars surface) or press **Compare** (Near Earth / Deep space), tap a glowing zone on the body to see why, open **Crew** for all four members.
 
 ## How it works: rules decide, forecast warns, AI advises
@@ -67,6 +70,7 @@ The case card shows what the agent has done and what waits for a person, with an
 - **Countermeasure follow-up**: "did it work?" a few days later.
 - **Earth screen** as one picture: each report is an envelope that travels from the ship to Earth; the travel time is compressed and stated on screen.
 - **Crew monitor** for four members with the cabin environment: when several crew members show the same symptom and a cabin reading such as CO2 is off, it flags "Cabin cause, not crew" (a hypothesis). Also day rings, streak, crew patch and the **CrewCheck Index** with open weights.
+- **Cabin environment**: CO2, noise, temperature and light, plus radiation. Thresholds are Earth indoor references (Health Canada, NIOSH, OSHA) or demo assumptions, labelled as such, not spacecraft norms.
 - **Sources** screen: the decision chain as a picture, the data passport and every threshold with its source.
 - Radiation dose estimate and an instruments panel (drawer).
 
