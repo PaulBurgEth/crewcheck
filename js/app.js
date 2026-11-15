@@ -3,6 +3,8 @@ import { state, set, subscribe, resetDemo } from './state.js';
 import { renderToday, resetTimeline } from './screens/today.js';
 import { story, startStory, stopStory, setStoryListener } from './screens/story.js';
 import { icon } from './viz/icons.js';
+import { shipSvg } from './viz/scene.js';
+import { missionById, decidesText, oneWayText, isReachable } from './data/missions.js';
 
 const SCREENS = [
   { id: 'crew', label: 'Crew' },
@@ -19,6 +21,15 @@ export function registerScreen(id, fn) { renderers[id] = fn; }
 const app = document.getElementById('app');
 const nav = h('nav', { class: 'tabs', 'aria-label': 'Screens' });
 document.querySelector('.top').append(nav);
+// Mission strip on every screen: where we are and who decides at this distance. Tap opens the distance scene.
+const strip = h('button', { type: 'button', class: 'mstrip', onclick: () => { go('today'); setTimeout(() => document.querySelector('.scene-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 120); } });
+document.querySelector('.top').append(strip);
+function renderStrip() {
+  const m = missionById(state.missionId);
+  strip.dataset.far = String(!isReachable(m));
+  strip.setAttribute('aria-label', `${m.label}, ${oneWayText(m)}, ${decidesText(m)}. Open the distance scene`);
+  strip.replaceChildren(shipSvg(), h('span', { class: 'ms-m', text: m.label }), h('span', { class: 'ms-d', text: oneWayText(m) }), h('span', { class: 'ms-who', text: decidesText(m) }));
+}
 
 function readHash() {
   const [route, query] = location.hash.replace(/^#\/?/, '').split('?');
@@ -41,6 +52,7 @@ export function go(route, patch = {}) {
 }
 
 function render() {
+  renderStrip();
   nav.replaceChildren(...SCREENS.map((s) => h('a', {
     href: `#/${s.id}`, class: s.id === state.route ? 'on' : '',
     onclick: (e) => { e.preventDefault(); go(s.id); },

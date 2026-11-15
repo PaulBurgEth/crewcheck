@@ -48,6 +48,25 @@ function miniScale({ rule, status, records, day, base }) {
 }
 
 // Shown headline: who acts is already in WHO and the scene, so linked signals read as a count.
+// Big line of the verdict: who acts, and when Earth can answer (design: the distance decides who acts).
+export function whoActs(v, mission, selfName = '') {
+  const reach = mission.oneWayMin * 2 < 1;
+  const rt = Math.round(mission.oneWayMin * 2);
+  const far = `Earth answers in ${rt} min`;
+  if (v.tier === 'none') return { title: v.headline, sub: '' };
+  if (v.tier === 'earth') return { title: 'Flight surgeon decides', sub: 'Answer in seconds' };
+  if (v.tier === 'crew') {
+    if (reach && mission.id === 'moon') return { title: 'Crew medic acts, surgeon live', sub: 'Answer in seconds' };
+    if (reach) return { title: 'Crew medic acts now', sub: 'Surgeon on the line' };
+    return { title: 'Crew medic acts now', sub: far };
+  }
+  return { title: `${selfName || 'Crew member'} acts now`, sub: reach ? 'Answer in seconds' : far };
+}
+// What happened, short: moves under WHAT now that the headline names who acts.
+export const whatText = (v, fired) => (v.combos?.length ? `${v.combos[0].systems.length} linked signals`
+  : /^Countermeasure partly/.test(v.headline) ? 'Partly worked'
+    : fired.length ? `${SIGNAL_LABEL[fired[0].signal]?.[0] || fired[0].signal}${fired.length > 1 ? ` +${fired.length - 1}` : ''}` : '');
+
 export const headlineText = (v) => (/^Linked signals/.test(v.headline) && v.combos?.length ? `${v.combos[0].systems.length} linked signals` : v.headline);
 
 // "Decided by rules": what moved, why (scales), who acts, when Earth can answer.
@@ -60,18 +79,21 @@ export function renderVerdict(container, { ev, v, records, mission, onRule, self
     fired.push(f);
   }
   const reach = mission.oneWayMin * 2 < 1;
+  const wa = whoActs(v, mission, selfName);
   const head = h('div', { class: 'vd-head' }, [icon('rule'), h('span', {}, 'Decided by rules')]);
   const line = h('div', { class: 'vd-line' }, [
     ev.liveAlert ? h('span', { class: `vd-live lc-${ev.liveAlert.level}` }, [icon('suit'), h('span', {}, `Suit · ${SIGNAL_LABEL[ev.liveAlert.signal][0]} ${ev.liveAlert.measured}`)]) : null,
     // Who acts is already in WHO and the distance scene; the headline names what happened.
-    h('span', { class: 'vd-headline' }, headlineText(v)),
+    h('span', { class: 'vd-headline' }, wa.title),
   ]);
-  const box = h('section', { class: `vd v-${v.status}`, 'data-spot': 'rules' }, [head, line]);
+  const subLine = wa.sub ? h('div', { class: 'vd-subline' }, [icon('clock'), h('span', {}, wa.sub)]) : null;
+  const box = h('section', { class: `vd v-${v.status}`, 'data-spot': 'rules' }, [head, line, subLine].filter(Boolean));
 
   if (v.tier !== 'none' && fired.length) {
     const what = h('div', { class: 'vd-part' }, [
       h('div', { class: 'vd-k' }, 'What'),
       h('div', { class: 'vd-icons' }, [...new Set(fired.map((f) => f.system))].map((s) => h('span', { class: `vd-ic d-${ev.systems[s].status}`, title: s }, [icon(SYSTEM_ICON[s] || 'check')]))),
+      h('div', { class: 'vd-what' }, whatText(v, fired)),
     ]);
     // The scale legend opens on hover or tap of the info mark, so it costs no words on screen.
     const legendBtn = h('button', { type: 'button', class: 'vd-info', 'aria-label': 'How to read the scales: bar personal norm, line threshold, dot now', 'aria-expanded': 'false', onclick: (e) => { const b = e.currentTarget; const on = b.getAttribute('aria-expanded') !== 'true'; b.setAttribute('aria-expanded', String(on)); } }, 'i');

@@ -9,24 +9,47 @@ import { QUESTIONS, ANSWERS } from '../js/data/advisor-precomputed.js';
 
 const hero = generateCrew().find((c) => c.id === HERO_ID);
 
-test('story has six steps with captions of at most 12 words', () => {
-  assert.equal(STEPS.length, 6);
-  for (const s of STEPS) assert.ok(s.caption.split(/\s+/).length <= 12, s.caption);
+test('story v2: nine steps from day 1, each with day, badge, title and two-sentence text', () => {
+  assert.equal(STEPS.length, 9);
+  assert.equal(STEPS[0].day, 1);
+  for (const s of STEPS) {
+    assert.ok(Number.isInteger(s.day) && s.day >= 1 && s.day <= 180, s.id);
+    assert.ok(s.badge.startsWith(`Day ${s.from ?? s.day}`), s.id);
+    const w = s.title.split(/\s+/).length;
+    assert.ok(w >= 2 && w <= 6, s.title);
+    assert.ok((s.text.match(/[.!?](\s|$)/g) || []).length >= 2, s.id);
+  }
 });
 
-test('step 4: the lit node differs for ISS and Mars transit on the same day', () => {
+test('story v2: Play takes at most 75 s, each step at least 5 s', () => {
+  const total = STEPS.reduce((a, s) => a + s.ms, 0);
+  assert.ok(total <= 75000, String(total));
+  for (const s of STEPS) assert.ok(s.ms >= 5000, s.id);
+});
+
+test('story v2: days in the cards match the data', () => {
+  const at = (id) => STEPS.find((x) => x.id === id);
+  const ev = (d) => evaluate(hero.records, d);
+  const mars = missionById('mars-transit');
+  assert.equal(ev(at('sense').day).overall, 'green');
+  const small = ev(at('small').day);
+  assert.equal(small.overall, 'yellow');
+  assert.ok(small.fired.some((f) => f.signal === 'exerciseMin'));
+  assert.equal(escalate(small, mars).tier, 'self');
+  const drift = at('drift');
+  assert.equal(ev(drift.from - 1).overall, 'green');
+  assert.equal(ev(drift.from).overall, 'yellow');
+  assert.equal(escalate(ev(drift.day), mars).tier, 'crew');
+  assert.ok(new Set(ev(drift.day).fired.map((f) => f.signal)).size >= 3);
+  assert.ok(STEPS.some((s) => s.id === 'act' && s.day === 121));
+});
+
+test('step distance: the lit node differs for ISS and Mars transit on the same day', () => {
   const s = STEPS.find((x) => x.id === 'distance');
   assert.ok(s.missions.includes('iss') && s.missions.includes('mars-transit'));
   const ev = evaluate(hero.records, s.day);
-  const iss = escalate(ev, missionById('iss')).tier;
-  const mars = escalate(ev, missionById('mars-transit')).tier;
-  assert.equal(iss, 'earth');
-  assert.equal(mars, 'crew');
-});
-
-test('steps use real days: drift ends yellow, sense is green', () => {
-  assert.equal(evaluate(hero.records, STEPS[0].day).overall, 'green');
-  assert.equal(evaluate(hero.records, STEPS[1].day).overall, 'yellow');
+  assert.equal(escalate(ev, missionById('iss')).tier, 'earth');
+  assert.equal(escalate(ev, missionById('mars-transit')).tier, 'crew');
 });
 
 test('advisor: three fixed questions give three different answers', () => {
