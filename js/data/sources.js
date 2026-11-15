@@ -13,6 +13,11 @@ export const SOURCES = {
   'nasa-bone': { kind: 'nasa', short: 'NASA HRP, Bone', title: 'NASA HRP: Risk of Spaceflight-Induced Bone Changes', url: 'https://www.nasa.gov/reference/risk-of-spaceflight-induced-bone-changes/' },
   'nasa-cardio': { kind: 'nasa', short: 'NASA HRP, Cardiovascular', title: 'NASA HRP: Risk of Cardiovascular Adaptations', url: 'https://www.nasa.gov/reference/risk-of-cardiovascular-adaptations/' },
   'nasa-behavior': { kind: 'nasa', short: 'NASA HRP, Behavioral', title: 'NASA HRP: Risk of Behavioral Conditions and Psychiatric Disorders', url: 'https://www.nasa.gov/reference/risk-of-behavioral-conditions-and-psychiatric-disorders/' },
+  'nasa-closed-env': { kind: 'nasa', short: 'NASA HRP, Closed Environments', title: 'NASA HRP Hazard: Hostile and Closed Environments', url: 'https://www.nasa.gov/hrp/hazard-hostile-closed-environments/' },
+  'hc-co2': { kind: 'earth', short: 'Earth indoor ref. (Health Canada)', title: 'Health Canada residential indoor air guideline for CO2: long-term exposure limit 1,000 ppm (24-hour average). Earth home reference, not a spacecraft norm', url: 'https://www.canada.ca/en/health-canada/services/publications/healthy-living/residential-indoor-air-quality-guidelines-carbon-dioxide.html' },
+  'niosh-noise': { kind: 'earth', short: 'Earth indoor ref. (NIOSH)', title: 'NIOSH recommended exposure limit for occupational noise: 85 dBA averaged over an eight-hour workday. Earth workplace reference, not a spacecraft norm', url: 'https://www.cdc.gov/niosh/noise/about/index.html' },
+  'osha-temp': { kind: 'earth', short: 'Earth indoor ref. (OSHA)', title: 'OSHA guidance for offices: temperature 68-76 °F (20-24.4 °C), humidity 20-60 %. Earth office reference, not a spacecraft norm', url: 'https://www.osha.gov/laws-regs/standardinterpretations/2003-02-24' },
+  'osha-light': { kind: 'earth', short: 'Earth indoor ref. (OSHA)', title: 'OSHA 1926.56 Table D-3: offices at least 30 foot-candles (about 323 lux). Earth workplace reference, not a spacecraft norm', url: 'https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.56' },
   'nasa-immune': { kind: 'nasa', short: 'NASA HRP, Immune', title: 'NASA HRP: Risk of Altered Immune System Responses', url: 'https://www.nasa.gov/reference/risk-of-altered-immune-system-responses/' },
   'nasa-std-3001': { kind: 'nasa', short: 'NASA-STD-3001 Vol. 1', title: 'NASA-STD-3001 Volume 1 Rev C, Crew Health', url: 'https://www.nasa.gov/wp-content/uploads/2023/11/nasa-std-3001-vol-1-rev-c-with-signature.pdf' },
   'csa-biomonitor': { kind: 'agency', short: 'CSA Bio-Monitor', title: 'Canadian Space Agency: Bio-Monitor', url: 'https://www.asc-csa.gc.ca/eng/sciences/bio-monitor.asp' },
@@ -27,4 +32,4 @@ export const SOURCES = {
   'demo-assumption': { kind: 'assumption', short: 'Demo assumption', title: 'Demo assumption: illustrative value chosen for this prototype, not a clinical or NASA threshold', url: null },
 };
 
-export const KIND_LABEL = { nasa: 'NASA HRP', agency: 'Partner agency', research: 'Research estimate', clinical: 'Clinical norm', assumption: 'Demo assumption' };
+export const KIND_LABEL = { nasa: 'NASA HRP', agency: 'Partner agency', research: 'Research estimate', clinical: 'Clinical norm', earth: 'Earth indoor reference', assumption: 'Demo assumption' };
