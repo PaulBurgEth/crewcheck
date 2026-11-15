@@ -34,3 +34,5 @@
 }
 @media (max-width:760px){.today.v2 .cab-chip{order:3}}
 .src-earth,.so a.src-earth{color:#67e8f9;border-color:rgba(103,232,249,.4)}
+.ct-sym{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--yellow);border:1px solid color-mix(in srgb,var(--yellow) 50%,transparent);border-radius:999px;padding:2px 9px}
+.ct-sym .ic{width:14px;height:14px}

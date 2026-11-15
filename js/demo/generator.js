@@ -11,7 +11,7 @@ export const MISSION_EVENTS = [
   { day: 104, id: 'treadmill-maintenance', label: 'Treadmill maintenance', who: ['kenji'], why: 'Treadmill downtime cuts exercise for nine days; a benign cause.' },
   { day: 116, id: 'on-call', label: 'On-call duty', who: ['sofia'], why: 'Night on-call shifts shorten sleep for a week.' },
   { day: 121, id: 'countermeasure', label: 'Countermeasure started', who: ['maya'], why: 'Light and sleep schedule plus added exercise begin.' },
-  { day: CABIN_EPISODE.from, id: CABIN_EPISODE.id, label: 'Cabin CO2 high', who: CABIN_EPISODE.who, why: 'Cabin CO2 above the demo limit for three days; several crew report headaches.' },
+  { day: CABIN_EPISODE.from, id: CABIN_EPISODE.id, label: 'Cabin CO2', who: CABIN_EPISODE.who, why: 'Cabin CO2 above the demo limit for three days; several crew report headaches.' },
   { day: 150, id: 'spe', label: 'Solar particle event', who: 'all', why: 'Radiation dose spikes for the whole crew in one day.' },
 ];
 
