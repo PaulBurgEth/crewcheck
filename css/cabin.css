@@ -50,3 +50,4 @@
 .cw-dot{color:var(--muted)}
 .cab-do{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;font-size:14px}
 @media (max-width:640px){.cab-title{font-size:16px}.cab-case.cab-big{width:100%}}
+.cab-case.cab-big{flex-basis:100%;margin-left:0}

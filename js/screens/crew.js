@@ -60,7 +60,8 @@ function indexStrip(day) {
 }
 
 // Mission ribbon marks: cabin event days over the crew index strip; tap jumps to the day.
-const jump = (d) => set({ day: d, liveAlert: null });
+// The address shows the day too, so a shared or reloaded link opens the same view.
+const jump = (d) => { history.replaceState(null, '', `#/crew?d=${d}`); set({ day: d, liveAlert: null }); };
 function cabinMarks() {
   const evs = MISSION_EVENTS.filter((e) => e.id.startsWith('cabin'));
   const pos = (d) => `${((d - 1) / 179) * 100}%`;
@@ -97,7 +98,7 @@ function caseBox(c) {
     h('div', { class: 'cab-why' }, [
       h('span', { class: 'cw' }, [icon('people'), h('b', { text: String(c.who.length) }), h('span', { text: 'crew' })]),
       h('span', { class: 'cw-dot', text: '·' }),
-      h('span', { class: 'cw', title: sym }, [icon('person'), h('span', { text: 'same symptom' })]),
+      h('span', { class: 'cw', title: 'Same symptom in each' }, [icon('person'), h('span', { text: sym.toLowerCase() })]),
       h('span', { class: 'cw-dot', text: '·' }),
       h('span', { class: 'cw warn' }, [icon('co2'), h('span', { text: c.word })]),
     ]),
