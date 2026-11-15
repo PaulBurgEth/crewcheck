@@ -27,7 +27,7 @@ export const earthSvg = () => el('svg', { class: 'scn-glyph', viewBox: '0 0 44 4
 // Mars surface: return home only at a launch window (design assumption). Same row on Monitor and Earth.
 export function homeRow(m) {
   if (!m.tabNote) return null;
-  return h('div', { class: 'scn-home' }, [icon('flag'), h('span', {}, 'Home only at launch window'), h('span', { class: 'scn-tag' }, 'design assumption')]);
+  return h('div', { class: 'scn-home', title: 'Design assumption' }, [icon('flag'), h('span', {}, 'Home only at launch window')]);
 }
 export const tabLabel = (mi) => [h('span', { class: 'scn-ms-l' }, mi.label), mi.tabNote ? h('span', { class: 'scn-ms-c' }, mi.tabNote) : null];
 
@@ -98,7 +98,8 @@ export function createScene(container, { onMission, onCompare } = {}) {
       const left = oneWayS * 2 * (1 - k);
       const text = k >= 1 ? `Answer arrives after ${mmss(oneWayS * 2)} · crew already acted`
         : out ? `Reaches Earth in ${mmss(left - oneWayS)} · answer back in ${mmss(left)}` : `Answer back in ${mmss(left)}`;
-      clock.replaceChildren(icon('clock'), h('span', {}, text), h('span', { class: 'scn-tag', title: 'The real delay is shown sped up' }, D < 500 ? `${Math.round(oneWayS * 2 / 60)} min, shown at once` : `${Math.round(oneWayS * 2 / 60)} min shown in ${Math.round(D / 1000)} s`));
+      clock.title = D < 500 ? 'The real delay is shown at once' : `The real ${Math.round(oneWayS * 2 / 60)} min are shown in ${Math.round(D / 1000)} s`;
+      clock.replaceChildren(icon('clock'), h('span', {}, text));
     };
     draw(0);
     timer = setInterval(() => {
@@ -114,10 +115,10 @@ export function createScene(container, { onMission, onCompare } = {}) {
     // Hover or tap an icon to read its two-word name in the row.
     const say = h('span', { class: 'scn-may-say', 'aria-live': 'polite' });
     const show = (x) => { say.textContent = x ? `${x.label}${x.on ? '' : ' · not here'}` : ''; };
-    mayRow.replaceChildren(h('span', { class: 'scn-may-k' }, 'Agent may'), ...may.map((x) => h('button', {
+    mayRow.replaceChildren(h('span', { class: 'scn-may-k', title: 'What the onboard agent can do on its own at this distance (design assumption)' }, 'Agent can'), ...may.map((x) => h('button', {
       type: 'button', class: `scn-may-i${x.on ? ' on' : ''}`, title: `${x.label}${x.on ? '' : ' (not here)'}`, 'aria-label': `${x.label}: ${x.on ? 'yes' : 'no'}`,
       onmouseenter: () => show(x), onmouseleave: () => show(null), onfocus: () => show(x), onblur: () => show(null), onclick: () => show(x),
-    }, [icon(x.icon)])), say, h('span', { class: 'scn-tag' }, 'design assumption'));
+    }, [icon(x.icon)])), say);
     if (selfName) nodes.self.querySelector('.scn-name').textContent = selfName;
     sw.replaceChildren(...missions.map((mi) => h('button', {
       type: 'button', class: `scn-ms${mi.id === m.id ? ' on' : ''}`, role: 'radio', 'aria-checked': String(mi.id === m.id),
@@ -155,7 +156,7 @@ export function createScene(container, { onMission, onCompare } = {}) {
         h('div', { class: 'scn-col-m' }, r.mission.label),
         h('div', { class: 'scn-dots' }, r.signals.map((s) => h('span', { class: `scn-dot d-${s.status}`, title: s.label }))),
         h('div', { class: 'scn-col-who' }, [icon(r.tier === 'none' ? 'check' : NODE[r.tier][0]), h('span', {}, r.tier === 'none' ? 'All clear' : NODE[r.tier][1])]),
-        r.may ? h('div', { class: 'scn-col-may' }, [icon('spark'), h('span', {}, `Agent may: ${r.may} of 6`)]) : null,
+        r.may ? h('div', { class: 'scn-col-may' }, [icon('spark'), h('span', {}, `Agent can: ${r.may} of 6`)]) : null,
       ])));
     }
   }
