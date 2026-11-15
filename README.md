@@ -13,6 +13,14 @@ Today spaceflight medicine relies on a flight surgeon on the ground. On the ISS 
 
 CrewCheck answers one question for every signal: **who acts now**, the astronaut, the crew medical officer, or Earth, and how long Earth's reply will take. The vitals come in automatically from a suit; the crew spends under a minute a day on input.
 
+## What makes it different
+1. **Distance changes who decides.** Switch ISS to Mars transit and the same signals change hands: "Ask the flight surgeon" near Earth, "Handle it yourself, report sent to Earth" far away.
+2. **Transparent rules.** 30 rules (29 thresholds and one linked-signal pattern), each with its threshold source or a "Demo assumption" label and a "Why in space" link to NASA HRP. Only rules change a verdict.
+3. **AI explains, the agent has limits.** The advisor never sets a status; the agent never diagnoses, chooses medicines or changes a threshold, and clinical steps wait for Approve.
+4. **Personal norm, not a population average.** Drift is measured against each astronaut's own first two weeks.
+5. **Weak signals as one pattern.** Sleep, mood and blood pressure slightly off together raise the tier early.
+6. **A case is followed to the end.** Re-measure, then an honest result, such as "Partly worked".
+
 ## See it in one minute
 1. Press **Play story** (about 40 seconds). Six steps run on the real app state, nothing is faked:
    - **Sense**: the suit measures, Maya does nothing.
@@ -63,7 +71,9 @@ The case card shows what the agent has done and what waits for a person, with an
 - Radiation dose estimate and an instruments panel (drawer).
 
 ## NASA data
-Built on the challenge's Resources tab:
+The challenge has no official dataset of astronaut health indicators. CrewCheck is built on the NASA Human Research Program resources from the challenge Resources tab, which the organizers confirmed meet the NASA data requirement: the five hazards set the structure of the body map; the risk pages set which indicators we ask for and which countermeasures we suggest; the delay of up to 20 minutes one way, from the Distance from Earth page, drives the whole "who acts" logic. The crew data is synthetic, with a data passport (see below).
+
+Resources used:
 - NASA HRP, [5 Hazards of Human Spaceflight](https://www.nasa.gov/hrp/hazards/): the frame of the body map and hazard texts.
 - NASA HRP, [Hazard: Distance from Earth](https://www.nasa.gov/hrp/hazard-distance-from-earth/): communication delay of up to 20 minutes one way, which drives the escalation logic.
 - NASA HRP, [Hazard: Gravity Fields](https://www.nasa.gov/hrp/hazard-gravity-fields/): bone loss of 1-1.5% a month, fluid shift toward the head.
