@@ -44,6 +44,7 @@ let compare = false;
 let drawer = false;
 let lastSystem = null;
 let lastStep = null;
+let lastReady = false;
 let playTimer = 0;
 let liveTimer = 0;
 export const resetTimeline = () => { shell = null; };
@@ -228,6 +229,9 @@ export function renderToday(root, hooks = {}) {
     if (Math.abs(dy) > 4) window.scrollTo({ top: Math.max(0, scrollY + dy), behavior: 'smooth' });
   };
   if (step && step !== lastStep) { setTimeout(bringIntoView, 30); setTimeout(bringIntoView, 450); }
+  // The card appears once the step's motion is over: bring card and blocks into view again at that moment.
+  if (step && story.ready && !lastReady) setTimeout(bringIntoView, 30);
+  lastReady = !!(step && story.ready);
   lastStep = step;
 
   // Live advice only on demand (bubble open, a question chosen, the note open) and only once the day
