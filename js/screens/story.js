@@ -157,6 +157,8 @@ export function placeNarrator(root, card) {
     card.style.cssText = '';
     const anchor = spot || root.querySelector('.today-head');
     if (anchor && card.nextSibling !== anchor) anchor.before(card);
+    // Narrow layout reorders blocks with CSS order; give the card its block's order so it stays right above it.
+    if (anchor) card.style.order = getComputedStyle(anchor).order;
     placeMarks(root, s);
     return;
   }
