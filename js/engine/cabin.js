@@ -1,4 +1,5 @@
 import { CABIN_PARAMS } from '../data/cabin.js';
+import { doseSummary } from './radiation.js';
 
 // Symptoms the crew rule compares across people (same day).
 export const SYMPTOMS = [
@@ -25,4 +26,18 @@ export function commonCause(members, cabinRow, min = 2) {
     }
   }
   return null;
+}
+
+// Radiation for the cabin strip, from the existing radiation engine (no new model):
+// crew mean dose today and so far; a solar particle event the engine detects becomes a non-clinical case.
+export function radiationCase(members, day) {
+  const s = members.map((m) => ({ id: m.id, ...doseSummary(m.records, day) }));
+  const mean = (k) => { const v = s.map((x) => x[k]).filter((x) => typeof x === 'number'); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+  const who = s.filter((x) => x.events.some((e) => e.day === day)).map((x) => x.id);
+  const today = mean('today');
+  return {
+    today: today == null ? null : Math.round(today * 10) / 10,
+    total: Math.round(mean('total')),
+    event: who.length ? { day, param: 'rad', label: 'Radiation', word: 'Radiation spike', who, action: 'Move to shelter', clinical: false, approval: false, confidence: 'hypothesis' } : null,
+  };
 }

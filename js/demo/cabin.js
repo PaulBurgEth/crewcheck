@@ -13,8 +13,8 @@ export function generateCabin(seed = 20261114) {
   const g = (sd) => clamp(gaussian(rng) * sd, -2 * sd, 2 * sd);
   const rows = [];
   for (let day = 1; day <= 180; day++) {
-    const co2 = inEp(day) ? 5 + rng() * 0.6 : 2.6 + g(0.3);
-    rows.push({ day, co2: round(co2, 1), noise: round(58 + g(1.5)), cabinTemp: round(22.5 + g(0.5), 1), light: round(320 + g(25)) });
+    const co2 = inEp(day) ? 1500 + rng() * 300 : 800 + g(80);
+    rows.push({ day, co2: Math.round(co2 / 10) * 10, noise: round(58 + g(1.5)), cabinTemp: round(22.5 + g(0.5), 1), light: round(450 + g(25)) });
   }
   return rows;
 }

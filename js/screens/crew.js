@@ -8,7 +8,7 @@ import { renderRings } from '../viz/rings.js';
 import { renderPatch } from '../viz/badges.js';
 import { SYSTEMS } from '../data/rules.js';
 import { CABIN_PARAMS } from '../data/cabin.js';
-import { cabinOut } from '../engine/cabin.js';
+import { cabinOut, radiationCase } from '../engine/cabin.js';
 import { MISSION_EVENTS } from '../demo/generator.js';
 
 const TIER_LABEL = { none: 'All clear', self: 'Handles it alone', crew: 'Crew medic', earth: 'Flight surgeon' };
@@ -64,52 +64,59 @@ function cabinMarks() {
     h('span', { class: 'cab-mark', style: `left:${((e.day - 1) / 179) * 100}%`, title: `Day ${e.day}: ${e.label}` }, [icon('cabin')])));
 }
 
-// Cabin strip: four parameters of the day; a shared cause links the parameter to the affected crew.
-function cabinStrip(day, cc) {
+// Cabin strip: four parameters plus radiation; a shared cause links the parameter to the affected crew.
+function caseBox(c) {
+  return h('div', { class: 'cab-case', role: 'status' }, [
+    h('div', { class: 'cab-cause' }, [h('span', { text: c.param === 'rad' ? `${c.word} · ${c.who.length} crew` : `Likely cabin cause · ${c.who.length} crew` }), confBadge('hypothesis')]),
+    h('div', { class: 'cab-act' }, [icon(c.param === 'rad' ? 'shield' : 'fan'), h('span', { text: c.action })]),
+    h('div', { class: 'cab-done' }, [icon('check'), h('span', { text: 'Agent: crew alerted' })]),
+    h('div', { class: 'cab-tag', text: 'Non-clinical · no approval' }),
+  ]);
+}
+function cabinStrip(day, cases, rad) {
   const row = cabin[day - 1];
   const out = new Set(cabinOut(row).map((p) => p.id));
-  const icons = h('div', { class: 'cab-icons' }, CABIN_PARAMS.map((p) => h('span', {
-    class: `cab-ic${out.has(p.id) ? ' warn' : ''}`, 'data-param': p.id, title: `${p.label}: ${row[p.id]} ${p.unit} · demo limit on Sources`,
-  }, [icon(p.icon), h('b', { text: row[p.id].toFixed(p.d) }), h('span', { class: 'cab-u', text: p.unit }), h('span', { class: 'cab-l', text: p.label })])));
-  const kids = [h('div', { class: 'cab-h' }, [icon('cabin'), h('span', { text: 'Cabin' })]), icons];
-  if (cc) {
-    kids.push(h('div', { class: 'cab-case', role: 'status' }, [
-      h('div', { class: 'cab-cause' }, [h('span', { text: `Likely cabin cause · ${cc.who.length} crew` }), confBadge('hypothesis')]),
-      h('div', { class: 'cab-act' }, [icon('fan'), h('span', { text: cc.action })]),
-      h('div', { class: 'cab-done' }, [icon('check'), h('span', { text: 'Agent: crew alerted' })]),
-      h('div', { class: 'cab-tag', text: 'Non-clinical · no approval' }),
-    ]));
-  }
-  return h('section', { class: `cab${cc ? ' on' : ''}`, 'aria-label': `Cabin, day ${day}` }, kids);
+  const icons = h('div', { class: 'cab-icons' }, [...CABIN_PARAMS.map((p) => h('span', {
+    class: `cab-ic${out.has(p.id) ? ' warn' : ''}`, 'data-param': p.id, title: `${p.title || p.label}: ${row[p.id]} ${p.unit} · Earth indoor reference on Sources`,
+  }, [icon(p.icon), h('b', { text: row[p.id].toFixed(p.d) }), h('span', { class: 'cab-u', text: p.unit }), h('span', { class: 'cab-l', text: p.label })])),
+  h('span', {
+    class: `cab-ic${rad.event ? ' warn' : ''}`, 'data-param': 'rad', title: `Radiation: ${rad.today ?? '–'} mSv today, ${rad.total} mSv so far (crew mean) · magnitudes demo assumption`,
+  }, [icon('rad'), h('b', { text: rad.today == null ? '–' : rad.today.toFixed(1) }), h('span', { class: 'cab-u', text: 'mSv' }), h('span', { class: 'cab-l', text: `Rad · ${rad.total} total` })])]);
+  const kids = [h('div', { class: 'cab-h' }, [icon('cabin'), h('span', { text: 'Cabin' })]), icons, ...cases.map(caseBox)];
+  return h('section', { class: `cab${cases.length ? ' on' : ''}`, 'aria-label': `Cabin, day ${day}` }, kids);
 }
 
-// Lines from the out-of-range cabin icon to the affected tiles; redrawn on resize.
-function drawLinks(wrap, cc) {
+// Lines from the out-of-range icon to the affected tiles; redrawn on resize.
+function drawLinks(wrap, cases) {
   const old = wrap.querySelector('.cab-links');
   if (old) old.remove();
-  if (!cc || !wrap.isConnected) return;
-  const from = wrap.querySelector(`.cab-ic[data-param="${cc.param}"]`);
-  const tiles = cc.who.map((id) => wrap.querySelector(`.crew-tile[data-id="${id}"]`)).filter(Boolean);
-  if (!from || !tiles.length) return;
+  if (!cases.length || !wrap.isConnected) return;
   const W = wrap.getBoundingClientRect();
-  const f = from.getBoundingClientRect();
-  // Lines leave from the strip's lower edge under the icon, so they never cross the case text.
-  const x0 = f.left + f.width / 2 - W.left, y0 = wrap.querySelector('.cab').getBoundingClientRect().bottom - W.top;
-  const oneCol = new Set(tiles.map((t) => Math.round(t.getBoundingClientRect().left))).size === 1 && tiles.length > 1;
   const ends = [];
-  const paths = tiles.map((t) => {
-    const r = t.getBoundingClientRect();
-    if (oneCol) {
-      // Phone: run down the left gutter, then into the tile's left edge.
-      const gx = Math.max(3, r.left - W.left - 7), ty = r.top - W.top + 28;
-      ends.push([r.left - W.left + 6, ty]);
-      return `M${x0},${y0} V${y0 + 8} H${gx} V${ty} H${r.left - W.left + 6}`;
+  const paths = [];
+  for (const cc of cases) {
+    const from = wrap.querySelector(`.cab-ic[data-param="${cc.param}"]`);
+    const tiles = cc.who.map((id) => wrap.querySelector(`.crew-tile[data-id="${id}"]`)).filter(Boolean);
+    if (!from || !tiles.length) continue;
+    const f = from.getBoundingClientRect();
+    // Lines leave from the strip's lower edge under the icon, so they never cross the case text.
+    const x0 = f.left + f.width / 2 - W.left, y0 = wrap.querySelector('.cab').getBoundingClientRect().bottom - W.top;
+    const oneCol = new Set(tiles.map((t) => Math.round(t.getBoundingClientRect().left))).size === 1 && tiles.length > 1;
+    for (const t of tiles) {
+      const r = t.getBoundingClientRect();
+      if (oneCol) {
+        // Phone: run down the left gutter, then into the tile's left edge.
+        const gx = Math.max(3, r.left - W.left - 7), ty = r.top - W.top + 28;
+        ends.push([r.left - W.left + 6, ty]);
+        paths.push(`M${x0},${y0} V${y0 + 8} H${gx} V${ty} H${r.left - W.left + 6}`);
+        continue;
+      }
+      const x1 = r.left + r.width / 2 - W.left, y1 = r.top - W.top + 2;
+      ends.push([x1, y1]);
+      const my = (y0 + y1) / 2;
+      paths.push(`M${x0},${y0} C${x0},${my} ${x1},${my} ${x1},${y1}`);
     }
-    const x1 = r.left + r.width / 2 - W.left, y1 = r.top - W.top + 2;
-    ends.push([x1, y1]);
-    const my = (y0 + y1) / 2;
-    return `M${x0},${y0} C${x0},${my} ${x1},${my} ${x1},${y1}`;
-  });
+  }
   wrap.append(el('svg', { class: 'cab-links', width: W.width, height: W.height, viewBox: `0 0 ${W.width} ${W.height}`, 'aria-hidden': 'true' },
     [...paths.map((d) => el('path', { d })), ...ends.map(([cx, cy]) => el('circle', { cx, cy, r: 3 }))]));
 }
@@ -142,14 +149,17 @@ export default function renderCrew(root, { go }) {
   patch.append(renderPatch({ done: rows.map((r) => r.done), names: rows.map((r) => r.p.name), size: 96, flash: doneCount === 4 }));
 
   const cc = cabinCase(state.day);
+  const rad = radiationCase(state.crew.map((c) => ({ id: c.id, records: recordsOf(c.id) })), state.day);
+  const cases = [cc, rad.event].filter(Boolean);
+  const hitIds = new Set(cases.flatMap((c) => c.who));
   const wrap = h('div', { class: 'cab-wrap' });
-  wrap.append(cabinStrip(state.day, cc));
+  wrap.append(cabinStrip(state.day, cases, rad));
   const grid = h('div', { class: 'crew-grid' });
   for (const r of rows) {
     const dots = h('div', { class: 'crew-dots' }, SYSTEMS.map((s) => h('span', { class: `cd cd-${r.ev.systems[s.id].status}`, title: `${s.label}: ${r.ev.systems[s.id].status}` })));
     const tile = h('button', {
-      class: `crew-tile t-${r.v.status}${cc?.who.includes(r.p.id) ? ' cab-hit' : ''}`, 'data-id': r.p.id,
-      'aria-label': `${r.p.name}, ${r.v.status}, ${tierText(r.p, r.v.tier, state.crew)}${cc?.who.includes(r.p.id) ? ', likely cabin cause' : ''}. Open monitor`,
+      class: `crew-tile t-${r.v.status}${hitIds.has(r.p.id) ? ' cab-hit' : ''}`, 'data-id': r.p.id,
+      'aria-label': `${r.p.name}, ${r.v.status}, ${tierText(r.p, r.v.tier, state.crew)}${hitIds.has(r.p.id) ? ', cabin case' : ''}. Open monitor`,
       onclick: () => go('today', { personId: r.p.id }),
     }, [
       h('div', { class: 'ct-ring' }),
@@ -169,9 +179,9 @@ export default function renderCrew(root, { go }) {
   }
   wrap.append(grid);
   root.append(wrap);
-  setTimeout(() => drawLinks(wrap, cc), 0);
-  setTimeout(() => drawLinks(wrap, cc), 400);
+  setTimeout(() => drawLinks(wrap, cases), 0);
+  setTimeout(() => drawLinks(wrap, cases), 400);
   if (onResize) removeEventListener('resize', onResize);
-  onResize = () => drawLinks(wrap, cc);
+  onResize = () => drawLinks(wrap, cases);
   addEventListener('resize', onResize);
 }

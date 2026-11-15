@@ -7,10 +7,10 @@ import { MISSIONS } from '../data/missions.js';
 import { PASSPORT } from '../demo/passport.js';
 import { WEIGHTS, POINTS } from '../engine/score.js';
 import { AGENT_CAPS, AGENT_NEVER, agentMay } from '../engine/agent.js';
-import { CABIN_PARAMS, CABIN_SOURCE, CABIN_LIMIT_SOURCE, limitText } from '../data/cabin.js';
+import { CABIN_PARAMS, CABIN_SOURCE, RADIATION_SOURCES, limitText } from '../data/cabin.js';
 
 const OPS = { gte: '≥', lte: '≤', gt: '>', lt: '<' };
-const KIND_ORDER = ['nasa', 'agency', 'clinical', 'assumption'];
+const KIND_ORDER = ['nasa', 'agency', 'clinical', 'earth', 'assumption'];
 const SYS_LABEL = Object.fromEntries(SYSTEMS.map((s) => [s.id, s.label]));
 const UNIT = Object.fromEntries(PASSPORT.map((p) => [p.signal, p.unit]));
 
@@ -170,11 +170,12 @@ function passportSection() {
 }
 
 function cabinSection() {
-  const rows = CABIN_PARAMS.map((p) => [p.label, p.unit, limitText(p), srcTag(CABIN_LIMIT_SOURCE), p.action, srcTag(CABIN_SOURCE)]);
-  rows.push(['Crew rule', '', '2+ crew, same symptom, cabin out of range', srcTag(CABIN_LIMIT_SOURCE), 'One cabin case, non-clinical, no approval', srcTag(CABIN_SOURCE)]);
+  const rows = CABIN_PARAMS.map((p) => [p.title || p.label, p.unit, `${limitText(p)} (${p.note})`, srcTag(p.src), p.action, srcTag(CABIN_SOURCE)]);
+  rows.push(['Radiation', 'mSv', 'Spike when a day is above 3 × the median daily dose (radiation engine)', h('span', {}, [...RADIATION_SOURCES.map(srcTag), srcTag('demo-assumption')]), 'Move to shelter', srcTag('nasa-radiation')]);
+  rows.push(['Crew rule', '', '2+ crew, same symptom, cabin out of range', srcTag('demo-assumption'), 'One cabin case, non-clinical, no approval', srcTag(CABIN_SOURCE)]);
   return [
-    h('p', { text: 'Closed cabin environment is one of the five NASA HRP hazards. When several crew share a symptom while a cabin parameter is out of range, the cause is likely the ship, not the person. The limits below are demo assumptions; NASA is cited only for the hazard, not for these numbers.' }),
-    table(['Parameter', 'Unit', 'Demo limit', 'Limit basis', 'Agent action', 'Why in space'], rows),
+    h('p', { text: 'Closed cabin environment is one of the five NASA HRP hazards. When several crew share a symptom while a cabin parameter is out of range, the cause is likely the ship, not the person. Limits for CO2, noise, temperature and light are Earth indoor references (homes or workplaces) from public guidelines, not norms for a spacecraft; NASA is cited for the hazard, not for these numbers. Radiation comes from the same engine as the radiation card. Radio-frequency fields are not modelled: no NASA source on crew health effects.' }),
+    table(['Parameter', 'Unit', 'Limit', 'Limit source', 'Agent action', 'Why in space'], rows),
   ];
 }
 
